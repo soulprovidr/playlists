@@ -1,0 +1,76 @@
+[
+  {
+    "name": "r/disco",
+    "spotifyPlaylistId": "5RVgW86SpEvlSsr3ZiAPNB",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/disco.json"
+      }
+    ]
+  },
+  {
+    "name": "r/downtempo",
+    "spotifyPlaylistId": "4gH1V3AdotHlEWiSY5JKie",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/downtempo.json"
+      }
+    ]
+  },
+  {
+    "name": "r/hiphopheads",
+    "spotifyPlaylistId": "5jsP4iNrZokhKOvtyaj3ds",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/hiphopheads.json"
+      }
+    ]
+  },
+  {
+    "name": "Funk & Soul",
+    "spotifyPlaylistId": "4oIv1IwK30gzwFxVWcrJnI",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/disco.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/soul.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/funk.json"
+      }
+    ]
+  },
+  {
+    "name": "Electronic Daily",
+    "spotifyPlaylistId": "4Fxs4lPz6J1EUOqycWUACB",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/electronicmusic.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/futurebeats.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/house.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/deephouse.json"
+      },
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/dnb.json"
+      }
+    ]
+  }
+]
