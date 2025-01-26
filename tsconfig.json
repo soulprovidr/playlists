@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "baseUrl": ".",
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
@@ -9,9 +10,11 @@
     "strict": true,
     "skipLibCheck": true,
     "paths": {
-      "@lib/*": ["./src/lib/*"],
       "@app/*": ["./src/app/*"],
-      "@env": ["./src/_env"]
+      "@database": ["./src/_database"],
+      "@env": ["./src/_env"],
+      "@lib/*": ["./src/lib/*"]
     }
-  }
+  },
+  "include": ["./.config/**/*", "./src/**/*"]
 }

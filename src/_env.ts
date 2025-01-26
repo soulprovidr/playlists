@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export const env = createEnv(
   z.object({
+    DB_FILENAME: z.string(),
     OPENAI_API_KEY: z.string(),
     SERVER_PORT: z.coerce.number(),
     SPOTIFY_CLIENT_ID: z.string(),

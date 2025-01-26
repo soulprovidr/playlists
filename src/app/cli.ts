@@ -1,6 +1,6 @@
+import { buildPlaylist } from "@app/tasks/build-playlist";
 import { search } from "@inquirer/prompts";
 import playlistConfigs from "../../data/playlists.json";
-import { buildPlaylist } from "./build-playlist";
 import { PlaylistConfig } from "./validators";
 
 enum Command {

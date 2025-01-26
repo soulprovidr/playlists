@@ -1,16 +1,44 @@
+import { database } from "@database";
 import { env } from "@env";
 import SpotifyWebApi from "spotify-web-api-node";
 
-export const spotifyApi = new SpotifyWebApi({
+export const api = new SpotifyWebApi({
   clientId: env.SPOTIFY_CLIENT_ID,
   clientSecret: env.SPOTIFY_CLIENT_SECRET,
   redirectUri: env.SPOTIFY_REDIRECT_URI,
 });
 
-export const authorize = async (code: string | undefined): Promise<void> => {
-  const response = await spotifyApi.authorizationCodeGrant(code!);
+export async function authorizeUser(): Promise<void> {
+  const userToken = await database
+    .selectFrom("spotify_user_tokens")
+    .selectAll()
+    .executeTakeFirst();
+
+  if (!userToken) {
+    console.log(`
+      Authorize Spotify at:
+      ${api.createAuthorizeURL(
+        ["playlist-modify-public", "playlist-modify-private"],
+        "state",
+      )}
+    `);
+    return;
+  }
+
+  api.setAccessToken(userToken.access_token);
+  api.setRefreshToken(userToken.refresh_token);
+
+  await refreshToken();
+
+  return;
+}
+
+export const handleUserAuthCode = async (
+  code: string | undefined,
+): Promise<void> => {
+  const response = await api.authorizationCodeGrant(code!);
   if (response.statusCode === 200) {
-    spotifyApi.setCredentials({
+    api.setCredentials({
       accessToken: response.body.access_token,
       refreshToken: response.body.refresh_token,
     });
@@ -22,12 +50,12 @@ export const authorize = async (code: string | undefined): Promise<void> => {
   }
 };
 
-export const refreshAccessToken = async (): Promise<void> => {
-  const response = await spotifyApi.refreshAccessToken();
+export const refreshToken = async (): Promise<void> => {
+  const response = await api.refreshAccessToken();
   if (response.statusCode === 200) {
-    spotifyApi.setAccessToken(response.body.access_token);
+    api.setAccessToken(response.body.access_token);
     if (response.body.refresh_token) {
-      spotifyApi.setRefreshToken(response.body.refresh_token);
+      api.setRefreshToken(response.body.refresh_token);
     }
     return;
   } else {

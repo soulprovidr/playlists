@@ -1,5 +1,5 @@
 import { cli } from "@app/cli";
-import { authorize, spotifyApi } from "@app/spotify";
+import * as spotify from "@app/spotify";
 import { playlistConfigFileSchema } from "@app/validators";
 import { env } from "@env";
 import { serve } from "@hono/node-server";
@@ -8,22 +8,21 @@ import playlistConfigs from "../data/playlists.json";
 
 try {
   playlistConfigFileSchema.parse(playlistConfigs);
-} catch (error) {
-  console.error("Invalid playlist config.");
-  console.error(error);
+} catch (e) {
+  console.error(e);
   process.exit(1);
 }
 
-const app = new Hono();
+const router = new Hono();
 
-app.get("/", async (c) => {
+router.get("/", async (c) => {
   return c.text("Hello, world!");
 });
 
-app.get("/authorize/spotify", async (c) => {
+router.get("/authorize/spotify", async (c) => {
   const code = c.req.query("code");
   try {
-    await authorize(code);
+    await spotify.handleUserAuthCode(code);
     cli.start();
     return c.text("Spotify authorized!");
   } catch (e) {
@@ -32,15 +31,9 @@ app.get("/authorize/spotify", async (c) => {
   }
 });
 
-console.log(`
-  Authorize Spotify at:
-  ${spotifyApi.createAuthorizeURL(
-    ["playlist-modify-public", "playlist-modify-private"],
-    "state",
-  )}
-`);
+spotify.authorizeUser();
 
 serve({
-  fetch: app.fetch,
+  fetch: router.fetch,
   port: env.SERVER_PORT,
 });

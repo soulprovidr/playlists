@@ -3,8 +3,8 @@ import axios from "axios";
 import { backOff } from "exponential-backoff";
 import { FromSchema } from "json-schema-to-ts";
 import OpenAI from "openai";
-import { refreshAccessToken, spotifyApi } from "./spotify";
-import { PlaylistConfig, PlaylistSourceType } from "./validators";
+import { api, refreshToken } from "../spotify";
+import { PlaylistConfig, PlaylistSourceType } from "../validators";
 
 const PlaylistItemResponseSchema = {
   type: "object",
@@ -85,7 +85,7 @@ async function extractPlaylistItems(data: unknown): Promise<PlaylistItem[]> {
 async function findSongsOnSpotify(item: PlaylistItem): Promise<string | null> {
   return await backOff(
     async () => {
-      const searchResult = await spotifyApi.searchTracks(
+      const searchResult = await api.searchTracks(
         `${item.artist} ${item.title}`,
       );
       if (
@@ -133,7 +133,7 @@ async function updateSpotifyPlaylist(
   trackUris: string[],
 ): Promise<void> {
   try {
-    await spotifyApi.replaceTracksInPlaylist(playlistId, trackUris);
+    await api.replaceTracksInPlaylist(playlistId, trackUris);
     console.log("Playlist updated successfully.");
   } catch (error) {
     console.error("Error updating playlist:", error);
@@ -155,7 +155,7 @@ export async function buildPlaylist(playlistConfig: PlaylistConfig) {
 
     console.log(`Found ${playlistItems.length} PlaylistItems.`);
 
-    await refreshAccessToken();
+    await refreshToken();
     const trackUris = await getAllTracks(playlistItems);
     trackUris.sort(() => Math.random() - 0.5);
     trackUris.splice(100);
