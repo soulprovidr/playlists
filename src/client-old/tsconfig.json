@@ -1,0 +1,12 @@
+{
+  "extends": "@tsconfig/vite-react/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@api": ["_api"],
+      "@components/*": ["components/*"],
+      "@hooks/*": ["hooks/*"]
+    },
+    "plugins": [{ "name": "typescript-plugin-css-modules" }]
+  }
+}

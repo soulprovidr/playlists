@@ -5,14 +5,14 @@ async function migrateLatest() {
 
   results?.forEach((it) => {
     if (it.status === "Success") {
-      console.log(`migration "${it.migrationName}" was executed successfully`);
+      console.log(`Migration "${it.migrationName}" was executed successfully.`);
     } else if (it.status === "Error") {
-      console.error(`failed to execute migration "${it.migrationName}"`);
+      console.error(`Failed to execute migration "${it.migrationName}"`);
     }
   });
 
   if (error) {
-    console.error("failed to migrate");
+    console.error("Failed to migrate.");
     console.error(error);
     process.exit(1);
   }

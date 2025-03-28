@@ -1,0 +1,97 @@
+@import "./variables.css";
+@import "./layout.css" layer(layout);
+@import "./util.css" layer(util);
+
+@layer reset, typography, forms, layout, util;
+
+@layer reset {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+@layer typography {
+  body {
+    color: var(--color-text);
+    font-family: var(--font-family);
+    font-size: 16px;
+  }
+
+  h1 {
+    color: var(--color-primary);
+    font-size: 28px;
+    font-weight: 300;
+    letter-spacing: -1px;
+    margin: 0;
+  }
+
+  a,
+  a:visited {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+}
+
+@layer forms {
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 0;
+  }
+
+  label {
+    color: var(--color-text-light);
+    font-size: 14px;
+    line-height: 24px;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"] {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    height: 32px;
+    padding: 4px 10px;
+  }
+
+  textarea {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-family: var(--font-family);
+    line-height: 20px;
+    padding: 8px 10px;
+  }
+
+  select {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    height: 32px;
+    padding: 4px 14px 4px 10px;
+  }
+
+  button,
+  .btn-primary {
+    background: var(--color-primary);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 12px 24px;
+    text-decoration: none;
+  }
+}

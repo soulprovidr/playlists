@@ -1,0 +1,32 @@
+.layout {
+  background: white;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 64px;
+  margin-inline: auto;
+  padding: 24px 8px;
+  width: min(800px, 100%);
+
+  header {
+    border-bottom: 1px dashed #eee;
+    display: flex;
+    height: 64px;
+    justify-content: space-between;
+    padding: 8px 0;
+  }
+
+  main {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+}
+
+.brand {
+  color: var(--color-primary);
+  cursor: pointer;
+  font-family: MuseoModerno, Arial, Helvetica, sans-serif;
+  font-size: 28px;
+  letter-spacing: -3%;
+}

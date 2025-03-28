@@ -1,10 +1,8 @@
-import { ZodObject, z } from "zod";
+import { z } from "zod";
 
-export interface EnvSchema extends ZodObject<{}> {}
+export type Env<TEnvSchema extends z.AnyZodObject> = z.infer<TEnvSchema>;
 
-export type Env<TEnvSchema extends EnvSchema> = z.infer<TEnvSchema>;
-
-export function createEnv<TEnvSchema extends EnvSchema>(
+export function createEnv<TEnvSchema extends z.AnyZodObject>(
   envSchema: TEnvSchema,
 ): Env<TEnvSchema> {
   return envSchema.parse(process.env);

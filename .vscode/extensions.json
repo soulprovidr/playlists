@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "hossaini.bootstrap-intellisense",
+    "dbaeumer.vscode-eslint",
+    "mrmlnc.vscode-scss"
+  ]
+}

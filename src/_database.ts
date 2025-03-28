@@ -1,18 +1,29 @@
 import { env } from "@env";
+import { SpotifyUsersTable } from "@modules/spotify/spotify-users/spotify-users.types";
+import { UsersTable } from "@modules/users/users.types";
 import SqliteDatabase from "better-sqlite3";
 import { promises as fs } from "fs";
-import { FileMigrationProvider, Kysely, Migrator, SqliteDialect } from "kysely";
+import {
+  CamelCasePlugin,
+  FileMigrationProvider,
+  Kysely,
+  Migrator,
+  SqliteDialect,
+} from "kysely";
 import * as path from "path";
 import { fileURLToPath } from "url";
-import { Database } from "./database/types";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-export const database = new Kysely<Database>({
+export const database = new Kysely<{
+  spotifyUsers: SpotifyUsersTable;
+  users: UsersTable;
+}>({
   dialect: new SqliteDialect({
-    database: async () => new SqliteDatabase(env.DB_FILENAME),
+    database: async () => new SqliteDatabase(env.DATABASE_PATH),
   }),
+  plugins: [new CamelCasePlugin()],
 });
 
 export const migrator = new Migrator({
