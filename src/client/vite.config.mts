@@ -1,3 +1,4 @@
+import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import * as path from "path";
 import { defineConfig, UserConfig } from "vite";
@@ -6,11 +7,11 @@ import tsConfigPaths from "vite-tsconfig-paths";
 export default defineConfig(({ command }) => {
   const sharedConfig = {
     root: __dirname,
-    plugins: [tsConfigPaths(), react()],
+    plugins: [tsConfigPaths(), tailwindcss(), react()],
     publicDir: path.resolve(__dirname, "public"),
     resolve: {
       alias: {
-        styles: path.resolve(__dirname, "scss"),
+        styles: path.resolve(__dirname, "styles"),
       },
     },
   } satisfies UserConfig;
@@ -24,6 +25,7 @@ export default defineConfig(({ command }) => {
           port: 3001,
           proxy: {
             "/api": "http://localhost:3000",
+            "/auth": "http://localhost:3000",
           },
         },
       } satisfies UserConfig;

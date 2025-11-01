@@ -4,6 +4,7 @@ export interface UsersTable {
   id: Generated<number>;
   spotifyUserId: string;
   createdAt: ColumnType<string, never, never>;
+  updatedAt: ColumnType<string, never, never>;
 }
 
 export type User = Selectable<UsersTable>;

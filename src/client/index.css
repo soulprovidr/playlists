@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/typography";
+
+@plugin "daisyui" {
+  themes: business, light, dim;
+}
+
+@theme {
+  --color-primary: #43597d;
+}

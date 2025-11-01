@@ -1,0 +1,211 @@
+# Playlists Application Rules
+
+## Architecture Overview
+
+This application consists of two main components:
+1. **Server**: Hono-based API server (entrypoint: `src/_app.ts`)
+2. **Client**: Vite/React application (root: `src/client/`)
+3. **CLI**: Command-line interface (entrypoint: `src/_cli.ts`)
+
+### Development Environment
+- Server runs on port 3000 (dev: `npm run dev:api`)
+- Client runs on port 3001 (dev: `npm run dev:client`)
+- In development, the client proxies `/api` requests to `http://localhost:3000`
+- Both components run independently in development
+
+## Environment Management
+
+### Using mise
+- All environment configuration is managed through **mise** (`mise.toml`)
+- **NEVER** create or modify `.env` files directly
+- **ALWAYS** use `mise set` or edit `mise.toml` to change environment variables
+- Environment variables are validated using Zod schema in `src/_env.ts`
+- Access environment variables through the `@env` import: `import { env } from "@env"`
+
+### Environment Variables
+Current environment variables (defined in `mise.toml`):
+- `APPLICATION_PORT`: Server port (default: 3000)
+- `CLIENT_URL`: Client URL for CORS
+- `COOKIE_SECRET`: Secret for signed cookies
+- `NODE_ENV`: Environment mode (development/production)
+- `DATABASE_PATH`: Path to SQLite database
+- `OPENAI_API_KEY`: OpenAI API key
+- `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`: Spotify OAuth credentials
+
+## Database Management
+
+### Using Kysely
+- Database interactions are managed through **Kysely** ORM
+- **NEVER** use raw SQL queries or other database libraries
+- **ALWAYS** use the Kysely query builder interface
+- Database instance: Import from `@database`
+- Configuration: `kysely.config.ts`
+
+### Database Structure
+- SQLite database using `better-sqlite3`
+- Tables defined as TypeScript types in respective module folders
+- Database schema exported from `src/_database.ts`
+
+### Database Operations
+
+#### Queries
+Example query patterns:
+
+    import { database } from "@database";
+
+    // SELECT
+    const users = await database.selectFrom("users").selectAll().execute();
+
+    // WHERE
+    const user = await database
+      .selectFrom("users")
+      .where("id", "=", userId)
+      .selectAll()
+      .executeTakeFirst();
+
+#### Migrations
+- Location: `src/database/migrations/`
+- Create new migration: `npm run migrate:make -- migration_name`
+- Run migrations: `npm run migrate:latest`
+- Clean database: `npm run migrate:clean`
+
+#### Seeds
+- Location: `src/database/seeds/`
+- Create new seed: `npm run seed:make -- seed_name`
+- Run seeds: `npm run seed:run`
+
+## Code Organization
+
+### Path Aliases
+Use the following path aliases (defined in `tsconfig.json`):
+- `@api/*` → `src/api/*`
+- `@cookies` → `src/_cookies`
+- `@database` → `src/_database`
+- `@database/*` → `src/database/*`
+- `@env` → `src/_env`
+- `@lib/*` → `src/lib/*`
+- `@modules/*` → `src/modules/*`
+- `@tasks/*` → `src/tasks/*`
+
+**ALWAYS** use path aliases instead of relative imports for these directories.
+
+### Module Structure
+Modules follow a consistent pattern in `src/modules/`:
+
+    src/modules/[module-name]/
+    ├── [module-name].types.ts    # TypeScript types and interfaces
+    ├── [module-name].repo.ts     # Database repository layer (Kysely queries)
+    ├── [module-name].service.ts  # Business logic layer
+    ├── [module-name].helpers.ts  # Module helpers
+    └── [module-name].routes.ts   # API routes (if applicable)
+
+### Layered Architecture
+1. **Routes Layer** (`*.routes.ts`): Handle HTTP requests/responses
+2. **Service Layer** (`*.service.ts`): Business logic and orchestration
+3. **Repository Layer** (`*.repo.ts`): Database access through Kysely
+4. **Helpers Layer** (`*.helpers.ts`): Module helpers
+5. **Types Layer** (`*.types.ts`): TypeScript interfaces and types
+
+**NEVER** call repository functions directly from routes. Always go through the service layer.
+
+When importing services, repositories, and helpers, use the following pattern:
+
+    import * as moduleService from "./[module-name].service";
+    import * as moduleRepo from "./[module-name].repo";
+    import * as moduleHelpers from "./[module-name].helpers";
+
+### API Structure
+- API routes are defined in `src/api/`
+- Main API router: `src/api/api.routes.ts`
+- Auth routes: `src/api/auth/`
+- Feature routes organized by domain (e.g., `src/api/playlists/`)
+- Middleware in `src/api/middleware/`
+
+## Server Architecture (Hono)
+
+### Server Setup
+- Framework: Hono
+- Entry point: `src/_app.ts`
+- Middleware: logger, secure headers
+- Static file serving for production builds
+
+### Routing
+Example route pattern:
+
+    import { Hono } from "hono";
+
+    const routes = new Hono()
+      .get("/endpoint", async (c) => {
+        // Handle GET request
+        return c.json({ data: "response" });
+      })
+      .post("/endpoint", async (c) => {
+        // Handle POST request
+        return c.json({ data: "response" });
+      });
+
+### Authentication
+- JWT-based authentication
+- Signed cookies for session management
+- Auth middleware: `src/api/middleware/auth.ts`
+- Cookie utilities: `@cookies`
+
+## Client Architecture (React + Vite)
+
+### Client Structure
+- Entry point: `src/client/main.tsx`
+- App wrapper: `src/client/app/index.tsx`
+- Router: Wouter
+- State management: TanStack Query
+- Styling: Tailwind CSS + DaisyUI
+
+### Client Organization
+
+    src/client/
+    ├── app/           # App setup, providers, routes
+    ├── components/    # Reusable UI components
+    ├── features/      # Feature-specific components (auth, dashboard, playlists)
+    ├── lib/           # Client-side utilities
+    └── public/        # Static assets
+
+### API Calls from Client
+- Use TanStack Query for data fetching
+- API calls should target `/api/*` endpoints
+- Proxy configured in development to forward to server
+
+## CLI Interface
+
+### CLI Usage
+- Entry point: `src/_cli.ts`
+- Run with: `npm run cli`
+- Uses `@inquirer/prompts` for interactive prompts
+- Can trigger background tasks and maintenance operations
+
+### CLI Best Practices
+- Use interactive prompts for user input
+- Provide clear error messages
+- Handle exit signals gracefully
+
+## Best Practices
+
+### TypeScript
+- Use strict type checking
+- Define interfaces in `*.types.ts` files
+- Export types from module index when shared
+
+### Error Handling
+- Use try-catch blocks for async operations
+- Provide meaningful error messages
+- Log errors appropriately
+
+### Code Style
+- Use Prettier for formatting (`.prettierrc.json`)
+- Follow ESLint rules (`eslint.config.mjs`)
+- Use async/await over promises
+- Prefer named exports over default exports
+
+### Dependencies
+- Use lodash for utility functions
+- Use @js-joda for date/time operations
+- Never install raw SQL libraries
+- Never install additional environment management libraries (use mise)

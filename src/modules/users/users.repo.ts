@@ -6,6 +6,10 @@ export const insertUser = async (user: UserInsert): Promise<number> => {
   return Number(result.insertId);
 };
 
+export const getAllUsers = async (): Promise<User[]> => {
+  return database.selectFrom("users").selectAll().execute();
+};
+
 export const getUserById = async (
   userId: number,
 ): Promise<User | undefined> => {
@@ -21,7 +25,7 @@ export const getUserBySpotifyUserId = async (
 ): Promise<User | undefined> => {
   return database
     .selectFrom("users")
-    .where("spotify_user_id", "=", spotifyUserId)
+    .where("spotifyUserId", "=", spotifyUserId)
     .selectAll()
     .executeTakeFirst();
 };

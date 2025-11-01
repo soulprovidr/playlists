@@ -1,21 +1,22 @@
-import playlistConfigs from "../../../data/playlist-configs.json";
+import { database } from "@database";
 import { PlaylistConfig } from "./playlist-configs.types";
 
-export const getPlaylistConfigsBySpotifyUserId = async (
-  spotifyUserId: string,
-): Promise<PlaylistConfig[] | undefined> => {
-  return playlistConfigs.filter(
-    (config) => config.spotifyUserId === spotifyUserId,
-  );
+export const getPlaylistConfigById = async (
+  playlistConfigId: number,
+): Promise<PlaylistConfig | undefined> => {
+  return database
+    .selectFrom("playlistConfigs")
+    .where("id", "=", playlistConfigId)
+    .selectAll()
+    .executeTakeFirst();
 };
 
-export const getPlaylistConfigBySpotifyPlaylistId = async (
-  spotifyUserId: string,
-  spotifyPlaylistId: string,
-): Promise<PlaylistConfig | undefined> => {
-  return playlistConfigs.find(
-    (config) =>
-      config.spotifyUserId === spotifyUserId &&
-      config.spotifyPlaylistId === spotifyPlaylistId,
-  );
+export const getPlaylistConfigsByUserId = async (
+  userId: number,
+): Promise<PlaylistConfig[]> => {
+  return database
+    .selectFrom("playlistConfigs")
+    .where("userId", "=", userId)
+    .selectAll()
+    .execute();
 };

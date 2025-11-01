@@ -10,7 +10,7 @@ export default defineConfig(() => {
     plugins: [
       tsConfigPaths(),
       devServer({
-        entry: "src/_app.tsx",
+        entry: "src/_app.ts",
       }),
     ],
   };

@@ -38,6 +38,17 @@
     ]
   },
   {
+    "name": "r/reggae",
+    "spotifyUserId": "soulprovidr",
+    "spotifyPlaylistId": "3u3Ny2Nf6MsXVXUuWw1WqG",
+    "sources": [
+      {
+        "type": "reddit",
+        "url": "https://reddit.com/r/reggae.json"
+      }
+    ]
+  },
+  {
     "name": "r/downtempo",
     "spotifyUserId": "soulprovidr",
     "spotifyPlaylistId": "4gH1V3AdotHlEWiSY5JKie",

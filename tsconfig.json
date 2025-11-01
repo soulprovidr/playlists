@@ -10,11 +10,13 @@
     "resolveJsonModule": true,
     "types": ["vite/client"],
     "paths": {
-      "@api": ["./src/api"],
+      "@api/*": ["./src/api/*"],
+      "@context": ["./src/_context"],
+      "@cookies": ["./src/_cookies"],
       "@database": ["./src/_database"],
+      "@database/*": ["./src/database/*"],
       "@env": ["./src/_env"],
       "@lib/*": ["./src/lib/*"],
-      "@middleware/*": ["./src/middleware/*"],
       "@modules/*": ["./src/modules/*"],
       "@tasks/*": ["./src/tasks/*"]
     }

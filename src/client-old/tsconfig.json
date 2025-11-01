@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@api": ["_api"],
+      "@api": ["_api/"],
       "@components/*": ["components/*"],
       "@hooks/*": ["hooks/*"]
     },

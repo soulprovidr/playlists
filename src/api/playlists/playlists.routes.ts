@@ -1,39 +1,32 @@
-import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import { buildPlaylist } from "@tasks/build-playlist";
 import { Hono } from "hono";
+import _ from "lodash";
 import { authMiddleware } from "../middleware/auth";
+import * as playlistsService from "./playlists.service";
 
 export const playlistsRoutes = new Hono()
   .use(authMiddleware)
-  .get("/:spotifyPlaylistId", async (c) => {
-    const { spotifyUserId } = c.var.user;
-    const spotifyPlaylistId = c.req.param("spotifyPlaylistId");
-    const playlistConfig =
-      await playlistConfigsService.getPlaylistConfigBySpotifyPlaylistId(
-        spotifyUserId,
-        spotifyPlaylistId,
-      );
+  .get("/:playlistConfigId", async (c) => {
+    const { id: userId } = c.var.user;
+    const playlistConfigId = _.toNumber(c.req.param("playlistConfigId"));
+    const playlistView =
+      await playlistsService.getPlaylistView(playlistConfigId);
 
-    if (!playlistConfig) {
+    if (playlistView?.userId !== userId) {
+      return c.json({ error: "Unauthorized" }, 403);
+    }
+
+    if (!playlistView) {
       return c.json({ error: "Playlist not found" }, 404);
     }
 
-    return c.json(playlistConfig);
+    return c.json(playlistView);
   })
-  .post("/:spotifyPlaylistId/generate", async (c) => {
-    const { spotifyUserId } = c.var.user;
-    const spotifyPlaylistId = c.req.param("spotifyPlaylistId");
-    const playlistConfig =
-      await playlistConfigsService.getPlaylistConfigBySpotifyPlaylistId(
-        spotifyUserId,
-        spotifyPlaylistId,
-      );
-
-    if (!playlistConfig) {
-      return c.json({ error: "Playlist not found" }, 404);
+  .post("/:playlistConfigId/build", async (c) => {
+    const playlistConfigId = _.toNumber(c.req.param("playlistConfigId"));
+    try {
+      await playlistsService.buildPlaylistByPlaylistConfigId(playlistConfigId);
+      return c.json({ success: true });
+    } catch {
+      return c.json({ error: "Failed to build playlist" }, 500);
     }
-
-    await buildPlaylist(playlistConfig);
-
-    return c.json({ success: true });
   });
