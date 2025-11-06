@@ -25,7 +25,6 @@ export type PlaylistSourceConfig = RedditSourceConfig | RssSourceConfig;
 export interface PlaylistSourcesTable {
   id: Generated<number>;
   playlistConfigId: number;
-  name: string | null;
   type: PlaylistSourceType;
   config: JSONColumnType<PlaylistSourceConfig>;
 }

@@ -1,7 +1,12 @@
 import { getCurrentUser } from "@context";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
+import {
+  PlaylistSourceConfig,
+  PlaylistSourceType,
+} from "@modules/playlist-sources/playlist-sources.types";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
+import * as usersService from "@modules/users/users.service";
 import { buildPlaylist } from "@tasks/build-playlist";
 import _ from "lodash";
 import { PlaylistViewResponse } from "./playlists.types";
@@ -61,4 +66,83 @@ export const getPlaylistView = async (
     sources: playlistSources,
     tracks: playlist.tracks.items,
   };
+};
+
+export interface UpsertPlaylistRequest {
+  name: string;
+  description: string;
+  sources: Array<{
+    type: string;
+    config: PlaylistSourceConfig;
+  }>;
+}
+
+export const upsertPlaylist = async (
+  userId: number,
+  playlistConfigId: number | undefined,
+  data: UpsertPlaylistRequest,
+) => {
+  let config;
+
+  if (playlistConfigId) {
+    // Update existing playlist
+    const existingConfig =
+      await playlistConfigsService.getPlaylistConfigById(playlistConfigId);
+
+    if (!existingConfig) {
+      throw new Error("Playlist config not found");
+    }
+
+    if (existingConfig.userId !== userId) {
+      throw new Error("Unauthorized");
+    }
+
+    config = await playlistConfigsService.updatePlaylistConfig(
+      playlistConfigId,
+      {
+        name: data.name,
+        description: data.description,
+      },
+    );
+
+    // Delete existing sources and recreate them
+    await playlistSourcesService.deletePlaylistSourcesByPlaylistConfigId(
+      playlistConfigId,
+    );
+  } else {
+    // Create new playlist
+    // First get the user's Spotify user ID
+    const user = await usersService.getUserById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Create a Spotify playlist
+    const spotifyApi = await spotifyApiService.getInstance(userId);
+    const spotifyPlaylistResponse = await spotifyApi.createPlaylist(data.name, {
+      description: data.description,
+      public: false,
+    });
+    const spotifyPlaylist = spotifyPlaylistResponse.body;
+
+    config = await playlistConfigsService.createPlaylistConfig({
+      userId,
+      name: data.name,
+      description: data.description,
+      spotifyPlaylistId: spotifyPlaylist.id,
+    });
+  }
+
+  // Create new sources
+  const sources = await Promise.all(
+    _.map(data.sources, (source) =>
+      playlistSourcesService.createPlaylistSource({
+        playlistConfigId: config.id,
+        type: source.type as PlaylistSourceType,
+        config: JSON.stringify(source.config) as string,
+      }),
+    ),
+  );
+
+  return _.extend(config, { sources });
 };

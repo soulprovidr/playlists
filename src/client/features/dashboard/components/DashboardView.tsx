@@ -1,24 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
+import { LoadingView } from "../../../components/LoadingView";
 import { Layout } from "../../../components/layout";
 import * as dashboardService from "../dashboard.service";
 import { DashboardEmpty } from "./DashboardEmpty";
 import { DashboardList } from "./DashboardList";
 
 export const DashboardView = () => {
-  const { data: dashboardPlaylists, isLoading } = useQuery({
+  const { data: dashboardPlaylists, isFetching } = useQuery({
     queryKey: ["dashboard"],
     queryFn: dashboardService.getDashboardView,
     initialData: [],
   });
 
-  console.log(dashboardPlaylists);
-
   let children = null;
 
-  if (!isLoading && _.isEmpty(dashboardPlaylists)) {
+  if (isFetching) {
+    children = <LoadingView />;
+  } else if (_.isEmpty(dashboardPlaylists)) {
     children = <DashboardEmpty />;
-  } else if (!_.isEmpty(dashboardPlaylists)) {
+  } else {
     children = <DashboardList dashboardPlaylists={dashboardPlaylists} />;
   }
 

@@ -12,7 +12,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
     <div className="w-full flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-light tracking-tight">My Playlists</h1>
-        <Link className="link link-primary text-sm" href="/create">
+        <Link className="link link-primary text-sm" href="/playlists/new">
           + Create playlist
         </Link>
       </div>

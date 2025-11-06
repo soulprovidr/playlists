@@ -1,5 +1,9 @@
 import * as playlistConfigsRepo from "./playlist-configs.repo";
-import type { PlaylistConfig } from "./playlist-configs.types";
+import type {
+  PlaylistConfig,
+  PlaylistConfigInsert,
+  PlaylistConfigUpdate,
+} from "./playlist-configs.types";
 
 export const getPlaylistConfigsByUserId = async (
   userId: number,
@@ -11,4 +15,20 @@ export const getPlaylistConfigById = (
   playlistConfigId: number,
 ): Promise<PlaylistConfig | undefined> => {
   return playlistConfigsRepo.getPlaylistConfigById(playlistConfigId);
+};
+
+export const createPlaylistConfig = (
+  playlistConfig: PlaylistConfigInsert,
+): Promise<PlaylistConfig> => {
+  return playlistConfigsRepo.createPlaylistConfig(playlistConfig);
+};
+
+export const updatePlaylistConfig = (
+  playlistConfigId: number,
+  playlistConfig: PlaylistConfigUpdate,
+): Promise<PlaylistConfig> => {
+  return playlistConfigsRepo.updatePlaylistConfig(
+    playlistConfigId,
+    playlistConfig,
+  );
 };
