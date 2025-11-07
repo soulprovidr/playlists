@@ -3,9 +3,17 @@
 @plugin "@tailwindcss/typography";
 
 @plugin "daisyui" {
-  themes: business, light, dim;
+  themes: all;
 }
 
 @theme {
   --color-primary: #43597d;
+}
+
+h1 {
+  @apply text-2xl font-light;
+}
+
+.brand {
+  @apply text-3xl font-['MuseoModerno'] tracking-tight;
 }

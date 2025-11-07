@@ -158,194 +158,152 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
 
         <form onSubmit={handleSubmit}>
           {/* Basic Info Section */}
-          <div className="card bg-base-100 border border-base-content/5 mb-6">
-            <div className="card-body">
-              <h2 className="card-title mb-4">Basic Information</h2>
+          <fieldset className="fieldset border-base-content/5 rounded-box border p-4">
+            <legend className="fieldset-legend">Playlist Information</legend>
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Playlist Name *</span>
-                </label>
-                <input
-                  type="text"
-                  className="input input-bordered"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter playlist name"
-                  required
-                />
-              </div>
+            <label className="label">Name</label>
+            <input
+              type="text"
+              className="input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter playlist name"
+              required
+            />
 
-              <div className="form-control">
-                <label className="label">
-                  <span className="label-text">Description</span>
-                </label>
-                <textarea
-                  className="textarea textarea-bordered"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter playlist description"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </div>
+            <label className="label">Description</label>
+            <textarea
+              className="textarea"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter playlist description"
+              rows={3}
+            />
+          </fieldset>
 
           {/* Sources Section */}
-          <div className="card bg-base-100 border border-base-content/5 mb-6">
-            <div className="card-body">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="card-title">Sources</h2>
-                <button
-                  type="button"
-                  className="btn btn-sm btn-primary"
-                  onClick={addSource}
-                >
-                  + Add Source
-                </button>
+          <fieldset className="fieldset border-base-content/5 rounded-box border p-4">
+            <legend className="fieldset-legend">Sources</legend>
+
+            {_.isEmpty(sources) ? (
+              <div className="text-center py-8 text-base-content/70">
+                <p>No sources added yet. Click "Add Source" to get started.</p>
               </div>
-
-              {_.isEmpty(sources) ? (
-                <div className="text-center py-8 text-base-content/70">
-                  <p>
-                    No sources added yet. Click "Add Source" to get started.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {_.map(sources, (source) => (
-                    <div
-                      key={source.id}
-                      className="border border-base-content/10 rounded-lg p-4"
+            ) : (
+              <div className="space-y-4">
+                {_.map(sources, (source) => (
+                  <div
+                    key={source.id}
+                    className="border border-base-content/10 rounded-lg p-4"
+                  >
+                    <label className="label">Source Type</label>
+                    <select
+                      className="select select-bordered"
+                      value={source.type}
+                      onChange={(e) => {
+                        const newType = e.target.value as PlaylistSourceType;
+                        const newConfig =
+                          newType === PlaylistSourceType.REDDIT
+                            ? {
+                                type: RedditSourceType.SUBREDDIT,
+                                value: "",
+                              }
+                            : { feedUrl: "" };
+                        updateSource(source.id, {
+                          type: newType,
+                          config: newConfig,
+                        });
+                      }}
                     >
-                      <div className="flex gap-4">
-                        <div className="flex-1">
-                          <div className="form-control mb-3">
-                            <label className="label">
-                              <span className="label-text">Source Type</span>
-                            </label>
-                            <select
-                              className="select select-bordered"
-                              value={source.type}
-                              onChange={(e) => {
-                                const newType = e.target
-                                  .value as PlaylistSourceType;
-                                const newConfig =
-                                  newType === PlaylistSourceType.REDDIT
-                                    ? {
-                                        type: RedditSourceType.SUBREDDIT,
-                                        value: "",
-                                      }
-                                    : { feedUrl: "" };
-                                updateSource(source.id, {
-                                  type: newType,
-                                  config: newConfig,
-                                });
-                              }}
-                            >
-                              <option value={PlaylistSourceType.REDDIT}>
-                                Reddit
-                              </option>
-                              <option value={PlaylistSourceType.RSS}>
-                                RSS
-                              </option>
-                            </select>
-                          </div>
+                      <option value={PlaylistSourceType.REDDIT}>Reddit</option>
+                      <option value={PlaylistSourceType.RSS}>RSS</option>
+                    </select>
 
-                          {source.type === PlaylistSourceType.REDDIT && (
-                            <>
-                              <div className="form-control mb-3">
-                                <label className="label">
-                                  <span className="label-text">
-                                    Reddit Source Type
-                                  </span>
-                                </label>
-                                <select
-                                  className="select select-bordered"
-                                  value={
-                                    (source.config.type as string) ||
-                                    RedditSourceType.SUBREDDIT
-                                  }
-                                  onChange={(e) =>
-                                    updateSourceConfig(source.id, {
-                                      type: e.target.value,
-                                    })
-                                  }
-                                >
-                                  <option value={RedditSourceType.SUBREDDIT}>
-                                    Subreddit
-                                  </option>
-                                  <option value={RedditSourceType.USER}>
-                                    User
-                                  </option>
-                                </select>
-                              </div>
+                    {source.type === PlaylistSourceType.REDDIT && (
+                      <>
+                        <label className="label">Reddit Source Type</label>
+                        <select
+                          className="select select-bordered"
+                          value={
+                            (source.config.type as string) ||
+                            RedditSourceType.SUBREDDIT
+                          }
+                          onChange={(e) =>
+                            updateSourceConfig(source.id, {
+                              type: e.target.value,
+                            })
+                          }
+                        >
+                          <option value={RedditSourceType.SUBREDDIT}>
+                            Subreddit
+                          </option>
+                          <option value={RedditSourceType.USER}>User</option>
+                        </select>
 
-                              <div className="form-control">
-                                <label className="label">
-                                  <span className="label-text">
-                                    {source.config.type ===
-                                    RedditSourceType.USER
-                                      ? "Username"
-                                      : "Subreddit Name"}
-                                  </span>
-                                </label>
-                                <input
-                                  type="text"
-                                  className="input input-bordered"
-                                  value={(source.config.value as string) || ""}
-                                  onChange={(e) =>
-                                    updateSourceConfig(source.id, {
-                                      value: e.target.value,
-                                    })
-                                  }
-                                  placeholder={
-                                    source.config.type === RedditSourceType.USER
-                                      ? "username"
-                                      : "subreddit"
-                                  }
-                                />
-                              </div>
-                            </>
-                          )}
+                        <label className="label">
+                          {source.config.type === RedditSourceType.USER
+                            ? "Username"
+                            : "Subreddit Name"}
+                        </label>
+                        <input
+                          type="text"
+                          className="input input-bordered"
+                          value={(source.config.value as string) || ""}
+                          onChange={(e) =>
+                            updateSourceConfig(source.id, {
+                              value: e.target.value,
+                            })
+                          }
+                          placeholder={
+                            source.config.type === RedditSourceType.USER
+                              ? "username"
+                              : "subreddit"
+                          }
+                        />
+                      </>
+                    )}
 
-                          {source.type === PlaylistSourceType.RSS && (
-                            <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">RSS Feed URL</span>
-                              </label>
-                              <input
-                                type="url"
-                                className="input input-bordered"
-                                value={(source.config.feedUrl as string) || ""}
-                                onChange={(e) =>
-                                  updateSourceConfig(source.id, {
-                                    feedUrl: e.target.value,
-                                  })
-                                }
-                                placeholder="https://example.com/feed.rss"
-                              />
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex items-center">
-                          <button
-                            type="button"
-                            className="btn btn-ghost btn-sm btn-circle"
-                            onClick={() => removeSource(source.id)}
-                            title="Remove source"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                    {source.type === PlaylistSourceType.RSS && (
+                      <div className="form-control">
+                        <label className="label">
+                          <span className="label-text">RSS Feed URL</span>
+                        </label>
+                        <input
+                          type="url"
+                          className="input input-bordered"
+                          value={(source.config.feedUrl as string) || ""}
+                          onChange={(e) =>
+                            updateSourceConfig(source.id, {
+                              feedUrl: e.target.value,
+                            })
+                          }
+                          placeholder="https://example.com/feed.rss"
+                        />
                       </div>
+                    )}
+
+                    <div className="flex items-center">
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm btn-circle"
+                        onClick={() => removeSource(source.id)}
+                        title="Remove source"
+                      >
+                        ✕
+                      </button>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              type="button"
+              className="btn btn-sm btn-primary"
+              onClick={addSource}
+            >
+              + Add Source
+            </button>
+          </fieldset>
 
           {/* Actions */}
           <div className="flex justify-end gap-3">

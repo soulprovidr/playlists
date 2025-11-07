@@ -49,10 +49,16 @@ export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
       </div>
 
       <div className="flex gap-3 items-center">
-        <Link href={`/playlists/${playlist?.id}/edit`}>
-          <button className="btn btn-ghost">Edit</button>
+        <Link
+          className="btn btn-ghost btn-sm"
+          href={`/playlists/${playlist?.id}/edit`}
+        >
+          Edit
         </Link>
-        <button className="btn btn-primary" onClick={handleBuildPlaylist}>
+        <button
+          className="btn btn-primary btn-soft btn-sm"
+          onClick={handleBuildPlaylist}
+        >
           Build Playlist
         </button>
       </div>

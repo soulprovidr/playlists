@@ -12,7 +12,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
     <div className="w-full flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-light tracking-tight">My Playlists</h1>
-        <Link className="link link-primary text-sm" href="/playlists/new">
+        <Link className="btn btn-ghost btn-sm" href="/playlists/new">
           + Create playlist
         </Link>
       </div>
@@ -36,7 +36,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
               <li className="list-row flex items-start gap-6 px-6 py-6 border-b border-base-300 last:border-b-0 hover:bg-base-200 transition-colors duration-150 cursor-pointer group">
                 <img
                   src={playlistConfig.imageUrl || "/img/default-cover.png"}
-                  className="rounded-box size-12"
+                  className="rounded-lg size-24"
                   alt={playlistConfig.name}
                 />
                 <div className="flex flex-col flex-1">

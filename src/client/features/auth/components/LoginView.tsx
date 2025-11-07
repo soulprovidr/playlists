@@ -5,10 +5,9 @@ export const LoginView = () => {
     <div className="hero min-h-screen bg-base-200">
       <div className="hero-content text-center">
         <div className="max-w-md">
-          <h1 className="text-5xl font-bold mb-8">Welcome to Playlists</h1>
-          <p className="mb-8">
-            Connect your Spotify account to get started with managing your
-            playlists.
+          <h1 className="brand mb-4">nudedisco</h1>
+          <p className="font-light tracking-wide mb-8">
+            Spotify playlist management
           </p>
           <a href={`${API_URL}/auth`} className="btn btn-primary btn-lg">
             <svg
