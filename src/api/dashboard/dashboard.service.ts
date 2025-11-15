@@ -45,6 +45,7 @@ export const getDashboardViewResponse = async (
       userId: playlistConfig.userId,
       name: playlistConfig.name,
       spotifyPlaylistId: playlistConfig.spotifyPlaylistId,
+      buildStatus: playlistConfig.buildStatus,
       createdAt: playlistConfig.createdAt,
       updatedAt: playlistConfig.updatedAt,
       sources: playlistSources,

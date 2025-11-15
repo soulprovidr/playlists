@@ -1,4 +1,6 @@
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
+import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import * as playlistsHelpers from "../playlists.helpers";
 import * as playlistsService from "../playlists.service";
@@ -8,11 +10,27 @@ interface PlaylistHeaderProps {
 }
 
 export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
+  const queryClient = useQueryClient();
+
+  const buildMutation = useMutation({
+    mutationFn: (playlistId: number) =>
+      playlistsService.buildPlaylist(playlistId),
+    onSuccess: () => {
+      // Invalidate the playlist query to trigger a refetch
+      queryClient.invalidateQueries({
+        queryKey: ["playlists", String(playlist?.id)],
+      });
+    },
+  });
+
   const handleBuildPlaylist = () => {
     if (playlist?.id) {
-      playlistsService.buildPlaylist(playlist.id);
+      buildMutation.mutate(playlist.id);
     }
   };
+
+  const isBuilding = playlist?.buildStatus === BuildStatus.IN_PROGRESS;
+  const isDisabled = isBuilding || buildMutation.isPending;
 
   return (
     <div className="flex justify-between items-center mb-6">
@@ -58,8 +76,12 @@ export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
         <button
           className="btn btn-primary btn-soft btn-sm"
           onClick={handleBuildPlaylist}
+          disabled={isDisabled}
         >
-          Build Playlist
+          {isBuilding && (
+            <span className="loading loading-spinner loading-sm"></span>
+          )}
+          {isBuilding ? "Building..." : "Build Playlist"}
         </button>
       </div>
     </div>

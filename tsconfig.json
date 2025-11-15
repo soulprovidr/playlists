@@ -16,6 +16,7 @@
       "@database": ["./src/_database"],
       "@database/*": ["./src/database/*"],
       "@env": ["./src/_env"],
+      "@jobs": ["./src/_jobs"],
       "@lib/*": ["./src/lib/*"],
       "@modules/*": ["./src/modules/*"],
       "@tasks/*": ["./src/tasks/*"]

@@ -1,4 +1,5 @@
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
+import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
 import { useState } from "react";
@@ -17,12 +18,17 @@ export const PlaylistView = ({ playlistId }: PlaylistViewProps) => {
     "tracks",
   );
 
-  const { data: playlist, isFetching } = useQuery<PlaylistViewResponse>({
+  const { data: playlist, isLoading } = useQuery<PlaylistViewResponse>({
     queryKey: ["playlists", playlistId],
     queryFn: () => playlistsService.getPlaylistView(playlistId),
+    refetchInterval: (query) => {
+      // Poll every 2 seconds if build status is IN_PROGRESS
+      const data = query.state.data;
+      return data?.buildStatus === BuildStatus.IN_PROGRESS ? 2000 : false;
+    },
   });
 
-  if (isFetching) {
+  if (isLoading) {
     return (
       <Layout>
         <LoadingView />

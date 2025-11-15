@@ -9,12 +9,19 @@ export enum PlaylistSourceType {
   REDDIT = "reddit",
 }
 
+export enum BuildStatus {
+  UNSTARTED = "UNSTARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  COMPLETED = "COMPLETED",
+}
+
 export interface PlaylistConfigsTable {
   id: Generated<number>;
   userId: number;
   name: string;
   description: string;
   spotifyPlaylistId: string;
+  buildStatus: ColumnType<BuildStatus, BuildStatus | undefined, BuildStatus>;
   createdAt: ColumnType<string, never, never>;
   updatedAt: ColumnType<string, never, never>;
 }

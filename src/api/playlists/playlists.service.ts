@@ -1,5 +1,7 @@
 import { getCurrentUser } from "@context";
+import { jobs } from "@jobs";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
+import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSourceConfig,
@@ -30,7 +32,40 @@ export const buildPlaylistByPlaylistConfigId = async (
     throw new Error("Unauthorized");
   }
 
-  await buildPlaylist(playlistConfig.id);
+  // Set status to IN_PROGRESS
+  await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
+    buildStatus: BuildStatus.IN_PROGRESS,
+  });
+
+  // Queue the build job
+  jobs.add(
+    async () => {
+      try {
+        await buildPlaylist(playlistConfig.id);
+        // Set status to COMPLETED on success
+        await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
+          buildStatus: BuildStatus.COMPLETED,
+        });
+      } catch (error) {
+        console.error(`Failed to build playlist ${playlistConfigId}:`, error);
+        // Reset status to UNSTARTED on error so it can be retried
+        await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
+          buildStatus: BuildStatus.UNSTARTED,
+        });
+      }
+    },
+    {
+      onSuccess: (jobId) =>
+        console.log(
+          `Playlist ${playlistConfigId} built successfully (${jobId})`,
+        ),
+      onError: (jobId, error) =>
+        console.error(
+          `Playlist ${playlistConfigId} build failed (${jobId}):`,
+          error,
+        ),
+    },
+  );
 
   return true;
 };
@@ -61,6 +96,7 @@ export const getPlaylistView = async (
     imageUrl: _.first(playlist.images)?.url,
     description: playlistConfig.description,
     spotifyPlaylistId: playlistConfig.spotifyPlaylistId,
+    buildStatus: playlistConfig.buildStatus,
     createdAt: playlistConfig.createdAt,
     updatedAt: playlistConfig.updatedAt,
     sources: playlistSources,

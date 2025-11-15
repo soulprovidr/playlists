@@ -1,3 +1,4 @@
+import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
 import { PlaylistSource } from "@modules/playlist-sources/playlist-sources.types";
 
 export interface PlaylistViewResponse {
@@ -7,6 +8,7 @@ export interface PlaylistViewResponse {
   imageUrl: string | undefined;
   description: string;
   spotifyPlaylistId: string;
+  buildStatus: BuildStatus;
   createdAt: string;
   updatedAt: string;
   sources: PlaylistSource[];
