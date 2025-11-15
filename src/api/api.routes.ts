@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { authRoutes } from "./auth/auth.routes";
 import { dashboardRoutes } from "./dashboard/dashboard.routes";
+import { playlistSourcesRoutes } from "./playlist-sources/playlist-sources.routes";
 import { playlistsRoutes } from "./playlists/playlists.routes";
 
 const api = new Hono();
@@ -8,6 +9,7 @@ const api = new Hono();
 export const apiRoutes = api
   .route("/auth", authRoutes)
   .route("/dashboard", dashboardRoutes)
-  .route("/playlists", playlistsRoutes);
+  .route("/playlists", playlistsRoutes)
+  .route("/playlist-sources", playlistSourcesRoutes);
 
 export type ApiType = typeof apiRoutes;

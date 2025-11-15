@@ -1,14 +1,72 @@
-import { RedditSourceConfig, RedditSourceType } from "./playlist-sources.types";
+import {
+  PlaylistSourceConfig,
+  PlaylistSourceType,
+} from "./playlist-sources.types";
+import * as redditHelpers from "./reddit/reddit.helpers";
+import * as rssHelpers from "./rss/rss.helpers";
 
-export const getRedditSourceUrl = (config: RedditSourceConfig): string => {
-  switch (config.type) {
-    case RedditSourceType.SUBREDDIT: {
-      return `https://www.reddit.com/r/${config.value}.json`;
-    }
-    case RedditSourceType.USER: {
-      return `https://www.reddit.com/user/${config.value}.json`;
-    }
-    default:
-      throw new Error(`Unsupported Reddit source type: ${config.type}`);
+// Re-export helpers from source-specific modules
+export {
+  getRedditSourceUrl,
+  isRedditUrl,
+  validateRedditUrl,
+} from "./reddit/reddit.helpers";
+export { isLikelyRssFeed, validateRssUrl } from "./rss/rss.helpers";
+
+export interface PlaylistSourceValidationResult {
+  valid: boolean;
+  type?: PlaylistSourceType;
+  config?: PlaylistSourceConfig;
+  error?: string;
+}
+
+/**
+ * Main validation function that determines the source type and validates accordingly
+ * Attempts to validate as Reddit first, then falls back to RSS
+ */
+export const validatePlaylistSourceUrl = async (
+  url: string,
+): Promise<PlaylistSourceValidationResult> => {
+  try {
+    // Validate URL format
+    new URL(url);
+  } catch {
+    return {
+      valid: false,
+      error: "Invalid URL format",
+    };
   }
+
+  // Check if it's a Reddit URL
+  if (redditHelpers.isRedditUrl(url)) {
+    const result = redditHelpers.validateRedditUrl(url);
+    if (result.valid && result.config) {
+      return {
+        valid: true,
+        type: PlaylistSourceType.REDDIT,
+        config: result.config,
+      };
+    }
+    return {
+      valid: false,
+      error: result.error || "Invalid Reddit URL",
+    };
+  }
+
+  // Try validating as RSS feed
+  const rssResult = await rssHelpers.validateRssUrl(url);
+  if (rssResult.valid && rssResult.config) {
+    return {
+      valid: true,
+      type: PlaylistSourceType.RSS,
+      config: rssResult.config,
+    };
+  }
+
+  return {
+    valid: false,
+    error:
+      rssResult.error ||
+      "URL does not appear to be a valid Reddit URL or RSS feed. Supported formats: Reddit subreddit/user URLs or RSS feed URLs",
+  };
 };

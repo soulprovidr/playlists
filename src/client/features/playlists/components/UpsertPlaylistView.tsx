@@ -1,14 +1,12 @@
+import { ValidateUrlResponse } from "@api/playlist-sources/playlist-sources.types";
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
-import {
-  PlaylistSourceType,
-  RedditSourceType,
-} from "@modules/playlist-sources/playlist-sources.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Layout } from "../../../components/layout";
 import { LoadingView } from "../../../components/LoadingView";
+import { ValidatedUrlInput } from "../../../components/ValidatedUrlInput";
 import * as playlistsService from "../playlists.service";
 
 interface UpsertPlaylistViewProps {
@@ -17,8 +15,9 @@ interface UpsertPlaylistViewProps {
 
 interface SourceFormData {
   id: string;
-  type: PlaylistSourceType;
-  config: {
+  url: string;
+  type?: string;
+  config?: {
     type?: string;
     value?: string;
     feedUrl?: string;
@@ -50,11 +49,27 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
       setName(existingPlaylist.name);
       setDescription(existingPlaylist.description);
       setSources(
-        _.map(existingPlaylist.sources, (source) => ({
-          id: `${source.id}`,
-          type: source.type,
-          config: source.config as SourceFormData["config"],
-        })),
+        _.map(existingPlaylist.sources, (source) => {
+          // Convert existing source back to URL format for display
+          let url = "";
+          if (source.type === "reddit" && source.config) {
+            const config = source.config as { type?: string; value?: string };
+            if (config.type === "subreddit") {
+              url = `https://reddit.com/r/${config.value}`;
+            } else if (config.type === "user") {
+              url = `https://reddit.com/user/${config.value}`;
+            }
+          } else if (source.type === "rss" && source.config) {
+            const config = source.config as { feedUrl?: string };
+            url = config.feedUrl || "";
+          }
+          return {
+            id: `${source.id}`,
+            url,
+            type: source.type,
+            config: source.config as SourceFormData["config"],
+          };
+        }),
       );
     }
   }, [existingPlaylist]);
@@ -87,12 +102,19 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
       return;
     }
 
+    // Validate all sources have valid config
+    const invalidSources = sources.filter((s) => !s.config || !s.type);
+    if (invalidSources.length > 0) {
+      setError("All sources must have valid URLs");
+      return;
+    }
+
     saveMutation.mutate({
       name: name.trim(),
       description: description.trim(),
       sources: _.map(sources, (source) => ({
-        type: source.type,
-        config: source.config,
+        type: source.type!,
+        config: source.config!,
       })),
     });
   };
@@ -100,11 +122,7 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
   const addSource = () => {
     const newSource: SourceFormData = {
       id: `new-${Date.now()}`,
-      type: PlaylistSourceType.REDDIT,
-      config: {
-        type: RedditSourceType.SUBREDDIT,
-        value: "",
-      },
+      url: "",
     };
     setSources([...sources, newSource]);
   };
@@ -113,17 +131,21 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
     setSources(sources.filter((s) => s.id !== id));
   };
 
-  const updateSource = (id: string, updates: Partial<SourceFormData>) => {
-    setSources(sources.map((s) => (s.id === id ? { ...s, ...updates } : s)));
-  };
-
-  const updateSourceConfig = (
+  const updateSourceUrl = (
     id: string,
-    configUpdates: SourceFormData["config"],
+    url: string,
+    validationResult?: ValidateUrlResponse,
   ) => {
     setSources(
       sources.map((s) =>
-        s.id === id ? { ...s, config: { ...s.config, ...configUpdates } } : s,
+        s.id === id
+          ? {
+              ...s,
+              url,
+              type: validationResult?.type,
+              config: validationResult?.config,
+            }
+          : s,
       ),
     );
   };
@@ -198,108 +220,13 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
                   >
                     <div className="flex gap-4">
                       <div className="flex-1">
-                        <div className="form-control mb-3">
-                          <label className="label">Source Type</label>
-                          <select
-                            className="select select-bordered"
-                            value={source.type}
-                            onChange={(e) => {
-                              const newType = e.target
-                                .value as PlaylistSourceType;
-                              const newConfig =
-                                newType === PlaylistSourceType.REDDIT
-                                  ? {
-                                      type: RedditSourceType.SUBREDDIT,
-                                      value: "",
-                                    }
-                                  : { feedUrl: "" };
-                              updateSource(source.id, {
-                                type: newType,
-                                config: newConfig,
-                              });
-                            }}
-                          >
-                            <option value={PlaylistSourceType.REDDIT}>
-                              Reddit
-                            </option>
-                            <option value={PlaylistSourceType.RSS}>RSS</option>
-                          </select>
-                        </div>
-
-                        {source.type === PlaylistSourceType.REDDIT && (
-                          <>
-                            <div className="form-control mb-3">
-                              <label className="label">
-                                <span className="label-text">
-                                  Reddit Source Type
-                                </span>
-                              </label>
-                              <select
-                                className="select select-bordered"
-                                value={
-                                  (source.config.type as string) ||
-                                  RedditSourceType.SUBREDDIT
-                                }
-                                onChange={(e) =>
-                                  updateSourceConfig(source.id, {
-                                    type: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value={RedditSourceType.SUBREDDIT}>
-                                  Subreddit
-                                </option>
-                                <option value={RedditSourceType.USER}>
-                                  User
-                                </option>
-                              </select>
-                            </div>
-
-                            <div className="form-control">
-                              <label className="label">
-                                <span className="label-text">
-                                  {source.config.type === RedditSourceType.USER
-                                    ? "Username"
-                                    : "Subreddit Name"}
-                                </span>
-                              </label>
-                              <input
-                                type="text"
-                                className="input input-bordered"
-                                value={(source.config.value as string) || ""}
-                                onChange={(e) =>
-                                  updateSourceConfig(source.id, {
-                                    value: e.target.value,
-                                  })
-                                }
-                                placeholder={
-                                  source.config.type === RedditSourceType.USER
-                                    ? "username"
-                                    : "subreddit"
-                                }
-                              />
-                            </div>
-                          </>
-                        )}
-
-                        {source.type === PlaylistSourceType.RSS && (
-                          <div className="form-control">
-                            <label className="label">
-                              <span className="label-text">RSS Feed URL</span>
-                            </label>
-                            <input
-                              type="url"
-                              className="input input-bordered"
-                              value={(source.config.feedUrl as string) || ""}
-                              onChange={(e) =>
-                                updateSourceConfig(source.id, {
-                                  feedUrl: e.target.value,
-                                })
-                              }
-                              placeholder="https://example.com/feed.rss"
-                            />
-                          </div>
-                        )}
+                        <ValidatedUrlInput
+                          value={source.url}
+                          onChange={(url, validationResult) =>
+                            updateSourceUrl(source.id, url, validationResult)
+                          }
+                          placeholder="Enter Reddit or RSS feed URL"
+                        />
                       </div>
 
                       <div className="flex items-center">
