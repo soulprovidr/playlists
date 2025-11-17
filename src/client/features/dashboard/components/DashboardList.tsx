@@ -19,12 +19,12 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
 
       <ul className="list bg-base-100 rounded-box">
         {dashboardPlaylists.map((playlistConfig) => {
-          const createdAt =
+          const updatedAt =
             databaseHelpers.getZonedDateTimeFromDatabaseTimestamp(
-              playlistConfig.createdAt,
+              playlistConfig.updatedAt,
             );
-          const formattedCreatedAt = datesHelpers.formatZonedDateTime(
-            createdAt!,
+          const formattedUpdatedAt = datesHelpers.formatZonedDateTime(
+            updatedAt!,
             "LLL d, yyyy",
           );
           return (
@@ -51,7 +51,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
                   </p>
                   <div className="flex flex-col gap-1 mt-2">
                     <p className="text-sm text-base-content/50">
-                      Created {formattedCreatedAt}
+                      Updated {formattedUpdatedAt}
                     </p>
                   </div>
                 </div>

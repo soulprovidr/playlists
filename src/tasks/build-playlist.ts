@@ -1,94 +1,35 @@
-import { env } from "@env";
+import { PlaylistItem } from "@lib/playlist-item-extraction";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import { PlaylistSourceType } from "@modules/playlist-configs/playlist-configs.types";
-import * as playlistSourcesHelpers from "@modules/playlist-sources/playlist-sources.helpers";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSource,
+  PlaylistSourceType,
   RedditSourceConfig,
+  RssSourceConfig,
 } from "@modules/playlist-sources/playlist-sources.types";
+import * as redditService from "@modules/playlist-sources/reddit/reddit.service";
+import * as rssService from "@modules/playlist-sources/rss/rss.service";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
 import * as usersService from "@modules/users/users.service";
-import axios from "axios";
 import { backOff } from "exponential-backoff";
-import { FromSchema } from "json-schema-to-ts";
 import _ from "lodash";
-import OpenAI from "openai";
 
-const PlaylistItemResponseSchema = {
-  type: "object",
-  properties: {
-    playlist_items: {
-      type: "array",
-      items: {
-        type: "object",
-        properties: {
-          artist: { type: "string" },
-          title: { type: "string" },
-        },
-        required: ["artist", "title"],
-        additionalProperties: false,
-      },
-    },
-  },
-  required: ["playlist_items"],
-  additionalProperties: false,
-} as const;
-
-type PlaylistItemResponse = FromSchema<typeof PlaylistItemResponseSchema>;
-
-interface PlaylistItem {
-  artist: string;
-  title: string;
-}
-
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
-
-async function getSourceJson(source: PlaylistSource): Promise<unknown> {
+async function getPlaylistItems(
+  source: PlaylistSource,
+): Promise<PlaylistItem[]> {
   switch (source.type) {
     case PlaylistSourceType.REDDIT: {
       const config = source.config as RedditSourceConfig;
-      const url = playlistSourcesHelpers.getRedditSourceUrl(config);
-      const { data, status } = await axios.get(url);
-      return status === 200 ? data : {};
+      return await redditService.extractPlaylistItems(config);
+    }
+    case PlaylistSourceType.RSS: {
+      const config = source.config as RssSourceConfig;
+      return await rssService.extractPlaylistItems(config);
     }
     default:
       console.warn(`Unsupported source type: ${source.type}`);
-      return {};
+      return [];
   }
-}
-
-// TODO: centralize OpenAI API interactions + add exponential backoff
-async function extractPlaylistItems(data: unknown): Promise<PlaylistItem[]> {
-  const prompt = `
-        Extract an array of objects with artist and song title from the following JSON.
-
-        ## Guidelines
-        1. Strip all years from the song title (e.g. "1980", "(1980)", "[1980]", etc.).
-        2. Strip all non-alphanumeric characters from the song title (e.g. "!", "?", "#", etc.)
-        3. Strip all non-alphanumeric characters from the artist name (e.g. "!", "?", "#", etc.)
-        4. Replace all non-English characters with their English equivalents (e.g. "é" -> "e", "á" -> "a", etc.)
-        5. Verify that a real song belonging to the artist exists.
-
-        ${JSON.stringify(data)}
-      `;
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "playlist_items",
-        schema: PlaylistItemResponseSchema,
-        strict: true,
-      },
-    },
-  });
-
-  const content = response.choices[0].message.content?.trim();
-  const { playlist_items } = JSON.parse(content!) as PlaylistItemResponse;
-  return playlist_items;
 }
 
 export async function buildPlaylist(playlistConfigId: number) {
@@ -113,14 +54,11 @@ export async function buildPlaylist(playlistConfigId: number) {
     ]);
 
   try {
-    const sourceData: unknown[] = await Promise.all(
-      _.map(playlistSources, getSourceJson),
-    );
-
     console.log("Extracting PlaylistItems...");
     const playlistItems: PlaylistItem[] = [];
-    for (const data of sourceData) {
-      const items = await extractPlaylistItems(data);
+
+    for (const source of playlistSources) {
+      const items = await getPlaylistItems(source);
       playlistItems.push(...items);
     }
 

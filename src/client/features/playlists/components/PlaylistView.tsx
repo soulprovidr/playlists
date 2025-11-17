@@ -42,32 +42,37 @@ export const PlaylistView = ({ playlistId }: PlaylistViewProps) => {
         <PlaylistHeader playlist={playlist} />
       </div>
 
-      <div>
-        <div role="tablist" className="tabs tabs-border">
-          <button
-            role="tab"
-            className={`tab ${selectedTab === "tracks" ? "tab-active" : ""}`}
-            aria-selected={selectedTab === "tracks"}
-            onClick={() => setSelectedTab("tracks")}
-          >
-            Tracks
-          </button>
-          <button
-            role="tab"
-            className={`tab ${selectedTab === "sources" ? "tab-active" : ""}`}
-            onClick={() => setSelectedTab("sources")}
-          >
-            Sources
-            <span className="badge badge-ghost ml-2">
-              {_.size(playlist?.sources)}
-            </span>
-          </button>
-        </div>
-
-        <div className="mt-4">
+      <div role="tablist" className="tabs tabs-border">
+        <button
+          role="tab"
+          className={`tab ${selectedTab === "tracks" ? "tab-active" : ""}`}
+          aria-selected={selectedTab === "tracks"}
+          onClick={() => setSelectedTab("tracks")}
+        >
+          Tracks
+          <span className="badge badge-ghost ml-2">
+            {_.size(playlist?.tracks)}
+          </span>
+        </button>
+        <div className="tab-content">
           {selectedTab === "tracks" && (
             <PlaylistTracks tracks={playlist?.tracks} />
           )}
+        </div>
+
+        <button
+          role="tab"
+          className={`tab ${selectedTab === "sources" ? "tab-active" : ""}`}
+          aria-selected={selectedTab === "sources"}
+          onClick={() => setSelectedTab("sources")}
+        >
+          Sources
+          <span className="badge badge-ghost ml-2">
+            {_.size(playlist?.sources)}
+          </span>
+        </button>
+
+        <div className="tab-content">
           {selectedTab === "sources" && (
             <PlaylistSources sources={playlist?.sources} />
           )}

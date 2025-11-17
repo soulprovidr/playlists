@@ -15,12 +15,13 @@ export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
   const buildMutation = useMutation({
     mutationFn: (playlistId: number) =>
       playlistsService.buildPlaylist(playlistId),
-    onSuccess: () => {
+    onMutate: () => {
       // Invalidate the playlist query to trigger a refetch
       queryClient.invalidateQueries({
         queryKey: ["playlists", String(playlist?.id)],
       });
     },
+    onSuccess: () => {},
   });
 
   const handleBuildPlaylist = () => {
