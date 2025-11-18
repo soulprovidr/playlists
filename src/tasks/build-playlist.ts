@@ -124,24 +124,17 @@ export async function buildPlaylist(playlistConfigId: number) {
       if (i === 0) {
         await spotifyApi.replaceTracksInPlaylist(
           playlistConfig.spotifyPlaylistId,
-          chunkedTrackUris[i].slice(100),
+          chunkedTrackUris[i],
         );
       } else {
         await spotifyApi.addTracksToPlaylist(
           playlistConfig.spotifyPlaylistId,
-          chunkedTrackUris[i].slice(i * 100, i * 100 + 100),
+          chunkedTrackUris[i],
           { position: i * 100 },
         );
       }
     }
-
-    console.log(`Found ${trackUris.length} songs on Spotify.`);
-
-    await spotifyApi.replaceTracksInPlaylist(
-      playlistConfig.spotifyPlaylistId,
-      trackUris,
-    );
   } catch (error) {
-    console.error("Error:", error);
+    console.trace(error);
   }
 }
