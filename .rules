@@ -24,7 +24,7 @@ This application consists of two main components:
 
 ### Environment Variables
 Current environment variables (defined in `mise.toml`):
-- `APPLICATION_PORT`: Server port (default: 3000)
+- `API_URL`: API URL
 - `CLIENT_URL`: Client URL for CORS
 - `COOKIE_SECRET`: Secret for signed cookies
 - `NODE_ENV`: Environment mode (development/production)

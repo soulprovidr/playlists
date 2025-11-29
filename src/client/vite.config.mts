@@ -21,11 +21,12 @@ export default defineConfig(({ command }) => {
       return {
         ...sharedConfig,
         server: {
+          host: "127.0.0.1",
           open: true,
           port: 3001,
           proxy: {
-            "/api": "http://localhost:3000",
-            "/auth": "http://localhost:3000",
+            "/api": "http://127.0.0.1:3000",
+            "/auth": "http://127.0.0.1:3000",
           },
         },
       } satisfies UserConfig;
