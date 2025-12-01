@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import _ from "lodash";
+import { Layout } from "../../../components/Layout";
 import { LoadingView } from "../../../components/LoadingView";
-import { Layout } from "../../../components/layout";
 import * as dashboardService from "../dashboard.service";
 import { DashboardEmpty } from "./DashboardEmpty";
 import { DashboardList } from "./DashboardList";
@@ -11,6 +11,7 @@ export const DashboardView = () => {
     queryKey: ["dashboard"],
     queryFn: dashboardService.getDashboardView,
     initialData: [],
+    refetchOnWindowFocus: false,
   });
 
   let children = null;

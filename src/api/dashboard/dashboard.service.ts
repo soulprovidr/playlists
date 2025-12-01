@@ -49,6 +49,7 @@ export const getDashboardViewResponse = async (
       createdAt: playlistConfig.createdAt,
       updatedAt: playlistConfig.updatedAt,
       sources: playlistSources,
+      trackCount: spotifyPlaylist?.tracks.total ?? 0,
     } as DashboardPlaylist;
   });
 

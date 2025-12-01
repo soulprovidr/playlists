@@ -17,7 +17,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
         </Link>
       </div>
 
-      <ul className="list bg-base-100 rounded-box">
+      <ul className="list bg-base-100">
         {dashboardPlaylists.map((playlistConfig) => {
           const updatedAt =
             databaseHelpers.getZonedDateTimeFromDatabaseTimestamp(
@@ -33,19 +33,21 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
               key={playlistConfig.id}
               asChild
             >
-              <li className="list-row flex items-start gap-6 px-6 py-6 border-b border-base-300 last:border-b-0 hover:bg-base-200 transition-colors duration-150 cursor-pointer group">
+              <li className="list-row gap-6 px-6 py-6 rounded-none first:rounded-t-lg last:rounded-b-lg hover:bg-base-200 cursor-pointer">
                 <img
                   src={playlistConfig.imageUrl || "/img/default-cover.png"}
                   className="rounded-lg size-24"
                   alt={playlistConfig.name}
                 />
                 <div className="flex flex-col flex-1">
-                  <Link
-                    className="text-xl link link-hover no-underline group-hover:link-primary"
-                    href={`/playlists/${playlistConfig.id}`}
-                  >
-                    {playlistConfig.name}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      className="text-xl link link-hover no-underline group-hover:link-primary"
+                      href={`/playlists/${playlistConfig.id}`}
+                    >
+                      {playlistConfig.name}
+                    </Link>
+                  </div>
                   <p className="mt-1 text-base-content">
                     {playlistConfig.description || "No playlist description."}
                   </p>
@@ -54,6 +56,15 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
                       Updated {formattedUpdatedAt}
                     </p>
                   </div>
+                </div>
+                <div className="flex gap-2">
+                  <span className="badge badge-sm badge-ghost">
+                    {playlistConfig.trackCount} tracks
+                  </span>
+                  <span className="badge badge-sm badge-ghost">
+                    {playlistConfig.sources.length} source
+                    {playlistConfig.sources.length > 1 ? "s" : ""}
+                  </span>
                 </div>
               </li>
             </Link>

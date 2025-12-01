@@ -15,4 +15,5 @@ export interface DashboardPlaylist extends PlaylistConfig {
   createdAt: string;
   updatedAt: string;
   sources: PlaylistSource[];
+  trackCount: number;
 }
