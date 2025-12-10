@@ -1,7 +1,10 @@
 import { getCurrentUser } from "@context";
 import { jobs } from "@jobs";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
+import {
+  BuildCadence,
+  BuildStatus,
+} from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSourceConfig,
@@ -48,9 +51,9 @@ export const buildPlaylistByPlaylistConfigId = async (
         });
       } catch (error) {
         console.error(`Failed to build playlist ${playlistConfigId}:`, error);
-        // Reset status to UNSTARTED on error so it can be retried
+        // Set status to ERRORED on error
         await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
-          buildStatus: BuildStatus.UNSTARTED,
+          buildStatus: BuildStatus.ERRORED,
         });
       }
     },
@@ -97,6 +100,8 @@ export const getPlaylistView = async (
     description: playlistConfig.description,
     spotifyPlaylistId: playlistConfig.spotifyPlaylistId,
     buildStatus: playlistConfig.buildStatus,
+    buildCadence: playlistConfig.buildCadence,
+    buildDay: playlistConfig.buildDay,
     createdAt: playlistConfig.createdAt,
     updatedAt: playlistConfig.updatedAt,
     sources: playlistSources,
@@ -111,6 +116,8 @@ export interface UpsertPlaylistRequest {
     type: string;
     config: PlaylistSourceConfig;
   }>;
+  buildCadence?: string;
+  buildDay?: string | null;
 }
 
 export const upsertPlaylist = async (
@@ -138,6 +145,8 @@ export const upsertPlaylist = async (
       {
         name: data.name,
         description: data.description,
+        buildCadence: data.buildCadence as BuildCadence | undefined,
+        buildDay: data.buildDay,
       },
     );
 
@@ -166,6 +175,8 @@ export const upsertPlaylist = async (
       name: data.name,
       description: data.description,
       spotifyPlaylistId: spotifyPlaylist.id,
+      buildCadence: data.buildCadence as BuildCadence | undefined,
+      buildDay: data.buildDay,
     });
   }
 

@@ -10,6 +10,17 @@
   --color-primary: #43597d;
 }
 
+html,
+body {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-base-100),
+    var(--color-base-100) 13px,
+    var(--color-base-200) 13px,
+    var(--color-base-200) 14px
+  );
+}
+
 h1 {
   @apply text-2xl font-light;
 }

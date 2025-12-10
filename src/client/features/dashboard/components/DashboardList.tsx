@@ -17,7 +17,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
         </Link>
       </div>
 
-      <ul className="list bg-base-100">
+      <ul className="list rounded-box border border-base-content/5 bg-base-100">
         {dashboardPlaylists.map((playlistConfig) => {
           const updatedAt =
             databaseHelpers.getZonedDateTimeFromDatabaseTimestamp(
@@ -33,7 +33,7 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
               key={playlistConfig.id}
               asChild
             >
-              <li className="list-row gap-6 px-6 py-6 rounded-none first:rounded-t-lg last:rounded-b-lg hover:bg-base-200 cursor-pointer">
+              <li className="list-row gap-6 px-6 py-6 rounded-none first:rounded-t-box last:rounded-b-box hover:bg-base-200 cursor-pointer">
                 <img
                   src={playlistConfig.imageUrl || "/img/default-cover.png"}
                   className="rounded-lg size-24"

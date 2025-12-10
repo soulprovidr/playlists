@@ -1,5 +1,6 @@
 import { ValidateUrlResponse } from "@api/playlist-sources/playlist-sources.types";
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
+import { DayOfWeek } from "@js-joda/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import { useEffect, useState } from "react";
@@ -32,6 +33,8 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [sources, setSources] = useState<SourceFormData[]>([]);
+  const [buildCadence, setBuildCadence] = useState<string>("NONE");
+  const [buildDay, setBuildDay] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch existing playlist if editing
@@ -48,6 +51,8 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
     if (existingPlaylist) {
       setName(existingPlaylist.name);
       setDescription(existingPlaylist.description);
+      setBuildCadence(existingPlaylist.buildCadence || "NONE");
+      setBuildDay(existingPlaylist.buildDay || null);
       setSources(
         _.map(existingPlaylist.sources, (source) => {
           // Convert existing source back to URL format for display
@@ -116,6 +121,8 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
         type: source.type!,
         config: source.config!,
       })),
+      buildCadence,
+      buildDay,
     });
   };
 
@@ -201,6 +208,43 @@ export const UpsertPlaylistView = ({ playlistId }: UpsertPlaylistViewProps) => {
               placeholder="Enter playlist description"
               rows={3}
             />
+          </fieldset>
+
+          {/* Scheduling Section */}
+          <fieldset className="fieldset border-base-content/5 rounded-box border p-4">
+            <legend className="fieldset-legend">Scheduling</legend>
+
+            <label className="label">Build Cadence</label>
+            <select
+              className="select"
+              value={buildCadence}
+              onChange={(e) => {
+                setBuildCadence(e.target.value);
+                if (e.target.value === "NONE") {
+                  setBuildDay(null);
+                }
+              }}
+            >
+              <option value="NONE">None</option>
+              <option value="WEEKLY">Weekly</option>
+            </select>
+
+            <label className="label">Build Day</label>
+            <select
+              className="select"
+              value={buildDay || ""}
+              onChange={(e) => setBuildDay(e.target.value || null)}
+              disabled={buildCadence === "NONE"}
+            >
+              <option value="">Select a day</option>
+              <option value={DayOfWeek.MONDAY.name()}>Monday</option>
+              <option value={DayOfWeek.TUESDAY.name()}>Tuesday</option>
+              <option value={DayOfWeek.WEDNESDAY.name()}>Wednesday</option>
+              <option value={DayOfWeek.THURSDAY.name()}>Thursday</option>
+              <option value={DayOfWeek.FRIDAY.name()}>Friday</option>
+              <option value={DayOfWeek.SATURDAY.name()}>Saturday</option>
+              <option value={DayOfWeek.SUNDAY.name()}>Sunday</option>
+            </select>
           </fieldset>
 
           {/* Sources Section */}

@@ -1,4 +1,7 @@
-import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
+import {
+  BuildCadence,
+  BuildStatus,
+} from "@modules/playlist-configs/playlist-configs.types";
 import { PlaylistSource } from "@modules/playlist-sources/playlist-sources.types";
 
 export interface PlaylistViewResponse {
@@ -9,6 +12,8 @@ export interface PlaylistViewResponse {
   description: string;
   spotifyPlaylistId: string;
   buildStatus: BuildStatus;
+  buildCadence: BuildCadence;
+  buildDay: string | null;
   createdAt: string;
   updatedAt: string;
   sources: PlaylistSource[];

@@ -14,6 +14,19 @@ const upsertPlaylistSchema = z.object({
       config: z.record(z.any()),
     }),
   ),
+  buildCadence: z.enum(["NONE", "WEEKLY"]).optional(),
+  buildDay: z
+    .enum([
+      "MONDAY",
+      "TUESDAY",
+      "WEDNESDAY",
+      "THURSDAY",
+      "FRIDAY",
+      "SATURDAY",
+      "SUNDAY",
+    ])
+    .optional()
+    .nullable(),
 });
 
 export const playlistsRoutes = new Hono()

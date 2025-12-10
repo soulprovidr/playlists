@@ -2,14 +2,16 @@ import { search } from "@inquirer/prompts";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import * as usersService from "@modules/users/users.service";
 import { buildPlaylist } from "@tasks/build-playlist";
+import { schedulePlaylists } from "./tasks/schedule-playlists";
 
 import "tsconfig-paths/register";
 
 enum Command {
-  RESYNC = "RESYNC",
+  REBUILD_PLAYLIST = "REBUILD_PLAYLIST",
+  SCHEDULE_PLAYLISTS = "SCHEDULE_PLAYLISTS",
 }
 
-async function resync() {
+async function rebuildPlaylistCommand() {
   const users = await usersService.getAllUsers();
   const userId = await search({
     message: "Select a user",
@@ -37,11 +39,18 @@ async function resync() {
   }
 }
 
+async function schedulePlaylistsCommand() {
+  console.log("Scheduling playlists...");
+  await schedulePlaylists();
+  console.log("Playlists scheduled.");
+}
+
 async function selectCommand(): Promise<Command | null> {
   return search({
     message: "What would you like to do?",
     source: () => [
-      { name: "Resync a playlist", value: Command.RESYNC },
+      { name: "Rebuild a playlist", value: Command.REBUILD_PLAYLIST },
+      { name: "Scheduling playlists", value: Command.SCHEDULE_PLAYLISTS },
       { name: "Exit", value: null },
     ],
   });
@@ -51,8 +60,11 @@ async function main() {
   console.log("Starting CLI...");
   const command = await selectCommand();
   switch (command) {
-    case Command.RESYNC:
-      await resync();
+    case Command.REBUILD_PLAYLIST:
+      await rebuildPlaylistCommand();
+      break;
+    case Command.SCHEDULE_PLAYLISTS:
+      await schedulePlaylistsCommand();
       break;
     default:
       process.exit(1);

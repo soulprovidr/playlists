@@ -15,6 +15,10 @@ export const getPlaylistConfigById = async (
     .executeTakeFirst();
 };
 
+export const getAllPlaylistConfigs = async (): Promise<PlaylistConfig[]> => {
+  return database.selectFrom("playlistConfigs").selectAll().execute();
+};
+
 export const getPlaylistConfigsByUserId = async (
   userId: number,
 ): Promise<PlaylistConfig[]> => {

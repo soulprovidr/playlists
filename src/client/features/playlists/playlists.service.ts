@@ -25,6 +25,8 @@ export interface UpsertPlaylistRequest {
       feedUrl?: string;
     };
   }>;
+  buildCadence?: string;
+  buildDay?: string | null;
 }
 
 export const upsertPlaylist = async (
