@@ -1,7 +1,10 @@
 import { DashboardPlaylist } from "@api/dashboard/dashboard.types";
 import * as databaseHelpers from "@database/database.helpers";
 import * as datesHelpers from "@lib/dates";
+import { BuildCadence } from "@modules/playlist-configs/playlist-configs.types";
 import { Link } from "wouter";
+import { RepeatIcon } from "../../../components/RepeatIcon";
+import * as playlistsHelpers from "../../playlists/playlists.helpers";
 
 interface DashboardListProps {
   dashboardPlaylists: DashboardPlaylist[];
@@ -64,6 +67,15 @@ export const DashboardList = ({ dashboardPlaylists }: DashboardListProps) => {
                   <span className="badge badge-sm badge-ghost">
                     {playlistConfig.sources.length} source
                     {playlistConfig.sources.length > 1 ? "s" : ""}
+                  </span>
+                  <span className="badge badge-sm badge-ghost flex items-center gap-2">
+                    {playlistConfig.buildCadence !== BuildCadence.NONE && (
+                      <RepeatIcon />
+                    )}
+                    {playlistsHelpers.getScheduleCadenceLabel(
+                      playlistConfig.buildCadence,
+                      playlistConfig.buildDay,
+                    )}
                   </span>
                 </div>
               </li>

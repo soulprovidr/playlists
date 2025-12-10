@@ -1,7 +1,11 @@
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
-import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
+import {
+  BuildCadence,
+  BuildStatus,
+} from "@modules/playlist-configs/playlist-configs.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { RepeatIcon } from "../../../components/RepeatIcon";
 import * as playlistsHelpers from "../playlists.helpers";
 import * as playlistsService from "../playlists.service";
 
@@ -52,17 +56,14 @@ export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
             <p className="mb-2 text-base-content/80">{playlist.description}</p>
           ) : null}
 
-          {playlist?.spotifyPlaylistId ? (
-            <a
-              className="link link-primary text-sm"
-              href={playlistsHelpers.getSpotifyPlaylistUrl(
-                playlist.spotifyPlaylistId,
+          {playlist ? (
+            <span className="badge badge-sm badge-ghost flex items-center gap-2">
+              {playlist.buildCadence !== BuildCadence.NONE && <RepeatIcon />}
+              {playlistsHelpers.getScheduleCadenceLabel(
+                playlist.buildCadence,
+                playlist.buildDay,
               )}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Open in Spotify
-            </a>
+            </span>
           ) : null}
         </div>
       </div>

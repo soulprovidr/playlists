@@ -1,4 +1,5 @@
 import { PlaylistViewResponse } from "@api/playlists/playlists.types";
+import { BuildCadence } from "@modules/playlist-configs/playlist-configs.types";
 import {
   PlaylistSourceType,
   RedditSourceConfig,
@@ -32,4 +33,19 @@ export const getSourceDetails = (
     return config.feedUrl;
   }
   return "Unknown";
+};
+
+export const getScheduleCadenceLabel = (
+  buildCadence: BuildCadence,
+  buildDay: string | null,
+): string => {
+  if (buildCadence === BuildCadence.WEEKLY) {
+    if (buildDay) {
+      const dayName = buildDay.charAt(0) + buildDay.slice(1).toLowerCase();
+      return `${dayName}s`;
+    }
+    return "Repeats weekly";
+  }
+
+  return "No schedule";
 };
