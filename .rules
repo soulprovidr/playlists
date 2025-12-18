@@ -74,6 +74,58 @@ Example query patterns:
 - Create new seed: `npm run seed:make -- seed_name`
 - Run seeds: `npm run seed:run`
 
+## Logging
+
+### Using the Logger
+- All logging is handled by **pino** (via `@logger`)
+- **NEVER** use `console.log`, `console.error`, etc. in server code
+- **ALWAYS** use the logger from `@logger`
+
+### Logger Usage
+Example logging patterns:
+
+    import { logger } from "@logger";
+
+    // Info logging
+    logger.info("User logged in");
+    logger.info(`Processing ${count} items`);
+
+    // Error logging with error object
+    try {
+      // some code
+    } catch (error) {
+      logger.error({ err: error }, "Failed to process request");
+    }
+
+    // Debug logging
+    logger.debug("Detailed debug information");
+
+    // Warning logging
+    logger.warn("Something unexpected happened");
+
+### Log Levels
+- `trace`: Most verbose, fine-grained information
+- `debug`: Debug information (development only)
+- `info`: Informational messages
+- `warn`: Warning messages
+- `error`: Error messages
+- `fatal`: Fatal errors
+
+### Debug Page
+- Access at `/debug` route in the client
+- Real-time log streaming via Server-Sent Events (SSE)
+- Features:
+  - Live tail of server logs
+  - Auto-scroll toggle
+  - Download logs as text file
+  - Clear logs button
+  - Connection status indicator
+- Logs are stored in memory (last 1000 entries)
+- API endpoints:
+  - `GET /api/debug/logs/stream` - SSE stream for real-time logs
+  - `GET /api/debug/logs/all` - Get all logs as JSON
+  - `DELETE /api/debug/logs` - Clear all logs
+
 ## Code Organization
 
 ### Path Aliases

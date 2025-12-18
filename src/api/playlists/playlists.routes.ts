@@ -1,4 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
+import { logger } from "@logger";
 import { Hono } from "hono";
 import _ from "lodash";
 import { z } from "zod";
@@ -43,7 +44,7 @@ export const playlistsRoutes = new Hono()
       );
       return c.json(result);
     } catch (error) {
-      console.error("Failed to upsert playlist:", error);
+      logger.error({ err: error }, "Failed to upsert playlist");
       return c.json({ error: "Failed to save playlist" }, 500);
     }
   })
@@ -63,7 +64,7 @@ export const playlistsRoutes = new Hono()
         );
         return c.json(result);
       } catch (error) {
-        console.error("Failed to upsert playlist:", error);
+        logger.error({ err: error }, "Failed to upsert playlist");
         return c.json({ error: "Failed to save playlist" }, 500);
       }
     },

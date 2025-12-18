@@ -18,6 +18,7 @@
       "@env": ["./src/_env"],
       "@jobs": ["./src/_jobs"],
       "@lib/*": ["./src/lib/*"],
+      "@logger": ["./src/_logger"],
       "@modules/*": ["./src/modules/*"],
       "@tasks/*": ["./src/tasks/*"]
     }

@@ -1,4 +1,5 @@
 import { PlaylistItem } from "@lib/playlist-item-extraction";
+import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
@@ -27,7 +28,7 @@ async function getPlaylistItems(
       return await rssService.extractPlaylistItems(config);
     }
     default:
-      console.warn(`Unsupported source type: ${source.type}`);
+      logger.warn(`Unsupported source type: ${source.type}`);
       return [];
   }
 }
@@ -54,7 +55,7 @@ export async function buildPlaylist(playlistConfigId: number) {
     ]);
 
   try {
-    console.log("Extracting PlaylistItems...");
+    logger.info("Extracting PlaylistItems...");
     const playlistItems: PlaylistItem[] = [];
 
     for (const source of playlistSources) {
@@ -62,7 +63,7 @@ export async function buildPlaylist(playlistConfigId: number) {
       playlistItems.push(...items);
     }
 
-    console.log(`Found ${playlistItems.length} PlaylistItems.`);
+    logger.info(`Found ${playlistItems.length} PlaylistItems.`);
 
     const trackUriPromises: (() => Promise<string | null>)[] = _.chain(
       playlistItems,
@@ -71,7 +72,7 @@ export async function buildPlaylist(playlistConfigId: number) {
         (item) => async () =>
           backOff(
             async () => {
-              console.log(
+              logger.info(
                 `Searching for Spotify track: ${item.artist} - ${item.title}`,
               );
               const searchResult = await spotifyApi.searchTracks(
@@ -109,11 +110,11 @@ export async function buildPlaylist(playlistConfigId: number) {
           trackUris.push(trackUri);
         }
       } catch (error) {
-        console.error(error);
+        logger.error({ err: error }, "Failed to get track URI");
       }
     }
 
-    console.log(`Found ${trackUris.length} songs on Spotify.`);
+    logger.info(`Found ${trackUris.length} songs on Spotify.`);
 
     const chunkedTrackUris: string[][] = _.chain(trackUris)
       .shuffle()
@@ -135,6 +136,6 @@ export async function buildPlaylist(playlistConfigId: number) {
       }
     }
   } catch (error) {
-    console.trace(error);
+    logger.error({ err: error }, "Failed to build playlist");
   }
 }

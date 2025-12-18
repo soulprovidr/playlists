@@ -5,6 +5,7 @@ import {
   PlaylistItemResponse,
   PlaylistItemResponseSchema,
 } from "@lib/playlist-item-extraction";
+import { logger } from "@logger";
 import axios from "axios";
 import _ from "lodash";
 import OpenAI from "openai";
@@ -83,7 +84,7 @@ async function extractRssContent(xmlContent: string): Promise<string[]> {
 
     return content;
   } catch (error) {
-    console.error("Failed to parse RSS feed:", error);
+    logger.error({ err: error }, "Failed to parse RSS feed");
     return [];
   }
 }
@@ -124,7 +125,7 @@ async function extractPlaylistItemsFromText(
     ) as PlaylistItemResponse;
     return playlist_items;
   } catch (error) {
-    console.error("Failed to extract playlist items from text:", error);
+    logger.error({ err: error }, "Failed to extract playlist items from text");
     return [];
   }
 }
@@ -135,14 +136,14 @@ async function extractPlaylistItemsFromText(
 export async function extractPlaylistItems(
   config: RssSourceConfig,
 ): Promise<PlaylistItem[]> {
-  console.log(`Extracting playlist items from RSS feed: ${config.feedUrl}`);
+  logger.info(`Extracting playlist items from RSS feed: ${config.feedUrl}`);
 
   // Fetch RSS feed
   const xmlContent = await fetchRssFeed(config.feedUrl);
 
   // Extract text content from feed items
   const content = await extractRssContent(xmlContent);
-  console.log(`Found ${content.length} content items from RSS feed`);
+  logger.info(`Found ${content.length} content items from RSS feed`);
 
   // Extract playlist items from content (in batches to avoid token limits)
   const contentBatches = _.chunk(content, OPENAI_CONTENT_BATCH_SIZE);
@@ -151,7 +152,7 @@ export async function extractPlaylistItems(
   for (let i = 0; i < contentBatches.length; i++) {
     const batchItems = await extractPlaylistItemsFromText(contentBatches[i]);
     allItems.push(...batchItems);
-    console.log(
+    logger.info(
       `Extracted ${batchItems.length} items from batch ${i + 1}/${contentBatches.length}`,
     );
 

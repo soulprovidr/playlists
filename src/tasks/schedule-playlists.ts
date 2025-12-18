@@ -1,5 +1,6 @@
 import { jobs } from "@jobs";
 import { DayOfWeek } from "@js-joda/core";
+import { logger } from "@logger";
 import * as playlistConfigsRepo from "@modules/playlist-configs/playlist-configs.repo";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import {
@@ -31,7 +32,7 @@ function getCurrentDayOfWeek(): string {
 export async function schedulePlaylists(): Promise<void> {
   try {
     const currentDay = getCurrentDayOfWeek();
-    console.log(
+    logger.info(
       `[Scheduler] Checking for scheduled builds on ${currentDay}...`,
     );
 
@@ -44,13 +45,13 @@ export async function schedulePlaylists(): Promise<void> {
         config.buildDay === currentDay,
     );
 
-    console.log(
+    logger.info(
       `[Scheduler] Found ${configsToRebuild.length} playlist(s) to rebuild`,
     );
 
     // Queue a build job for each config
     for (const config of configsToRebuild) {
-      console.log(
+      logger.info(
         `[Scheduler] Queueing build for playlist: ${config.name} (ID: ${config.id})`,
       );
 
@@ -68,9 +69,9 @@ export async function schedulePlaylists(): Promise<void> {
               buildStatus: BuildStatus.COMPLETED,
             });
           } catch (error) {
-            console.error(
-              `[Scheduler] Failed to build playlist ${config.id}:`,
-              error,
+            logger.error(
+              { err: error },
+              `[Scheduler] Failed to build playlist ${config.id}`,
             );
             // Set status to ERRORED on failure
             await playlistConfigsService.updatePlaylistConfig(config.id, {
@@ -80,18 +81,18 @@ export async function schedulePlaylists(): Promise<void> {
         },
         {
           onSuccess: (jobId) =>
-            console.log(
+            logger.info(
               `[Scheduler] Playlist ${config.id} built successfully (${jobId})`,
             ),
           onError: (jobId, error) =>
-            console.error(
-              `[Scheduler] Playlist ${config.id} build failed (${jobId}):`,
-              error,
+            logger.error(
+              { err: error },
+              `[Scheduler] Playlist ${config.id} build failed (${jobId})`,
             ),
         },
       );
     }
   } catch (error) {
-    console.error("[Scheduler] Error checking scheduled builds:", error);
+    logger.error({ err: error }, "[Scheduler] Error checking scheduled builds");
   }
 }

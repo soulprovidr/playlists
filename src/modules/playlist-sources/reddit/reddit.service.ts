@@ -5,6 +5,7 @@ import {
   PlaylistItemResponse,
   PlaylistItemResponseSchema,
 } from "@lib/playlist-item-extraction";
+import { logger } from "@logger";
 import axios from "axios";
 import _ from "lodash";
 import OpenAI from "openai";
@@ -97,7 +98,7 @@ async function fetchPostComments(permalink: string): Promise<string[]> {
 
     return comments;
   } catch (error) {
-    console.error(`Failed to fetch comments for ${permalink}:`, error);
+    logger.error({ err: error }, `Failed to fetch comments for ${permalink}`);
     return [];
   }
 }
@@ -130,7 +131,10 @@ async function fetchSubredditPosts(
         );
       }
     } catch (error) {
-      console.error(`Failed to fetch page ${i + 1} for r/${subreddit}:`, error);
+      logger.error(
+        { err: error },
+        `Failed to fetch page ${i + 1} for r/${subreddit}`,
+      );
       break;
     }
   }
@@ -166,7 +170,10 @@ async function fetchUserPosts(
         );
       }
     } catch (error) {
-      console.error(`Failed to fetch page ${i + 1} for u/${username}:`, error);
+      logger.error(
+        { err: error },
+        `Failed to fetch page ${i + 1} for u/${username}`,
+      );
       break;
     }
   }
@@ -210,7 +217,7 @@ async function extractPlaylistItemsFromText(
     ) as PlaylistItemResponse;
     return playlist_items;
   } catch (error) {
-    console.error("Failed to extract playlist items from text:", error);
+    logger.error({ err: error }, "Failed to extract playlist items from text");
     return [];
   }
 }
@@ -223,7 +230,7 @@ async function extractPlaylistItemsFromText(
 export async function extractPlaylistItems(
   config: RedditSourceConfig,
 ): Promise<PlaylistItem[]> {
-  console.log(
+  logger.info(
     `Extracting playlist items from Reddit ${config.type}: ${config.value}`,
   );
 
@@ -241,7 +248,7 @@ export async function extractPlaylistItems(
       throw new Error(`Unsupported Reddit source type: ${config.type}`);
   }
 
-  console.log(`Found ${posts.length} posts`);
+  logger.info(`Found ${posts.length} posts`);
 
   // Extract post titles
   const postTitles = posts.map((post) => post.data.title);
@@ -252,7 +259,7 @@ export async function extractPlaylistItems(
 
   for (let i = 0; i < postBatches.length; i++) {
     const batch = postBatches[i];
-    console.log(
+    logger.info(
       `Fetching comments for batch ${i + 1}/${postBatches.length} (${batch.length} posts)`,
     );
 
@@ -273,11 +280,11 @@ export async function extractPlaylistItems(
     }
   }
 
-  console.log(`Found ${allComments.length} comments`);
+  logger.info(`Found ${allComments.length} comments`);
 
   // Extract playlist items from titles
   const itemsFromTitles = await extractPlaylistItemsFromText(postTitles);
-  console.log(`Extracted ${itemsFromTitles.length} items from post titles`);
+  logger.info(`Extracted ${itemsFromTitles.length} items from post titles`);
 
   // Extract playlist items from comments (in batches to avoid token limits)
   const commentBatches = _.chunk(allComments, OPENAI_CONTENT_BATCH_SIZE);
@@ -286,7 +293,7 @@ export async function extractPlaylistItems(
   for (let i = 0; i < commentBatches.length; i++) {
     const batchItems = await extractPlaylistItemsFromText(commentBatches[i]);
     itemsFromComments.push(...batchItems);
-    console.log(
+    logger.info(
       `Extracted ${batchItems.length} items from comment batch ${i + 1}/${commentBatches.length}`,
     );
 
@@ -296,7 +303,7 @@ export async function extractPlaylistItems(
     }
   }
 
-  console.log(`Extracted ${itemsFromComments.length} items from comments`);
+  logger.info(`Extracted ${itemsFromComments.length} items from comments`);
 
   // Combine and deduplicate
   const allItems = [...itemsFromTitles, ...itemsFromComments];
@@ -305,7 +312,7 @@ export async function extractPlaylistItems(
     (item) => `${item.artist.toLowerCase()}-${item.title.toLowerCase()}`,
   );
 
-  console.log(`Total unique playlist items: ${uniqueItems.length}`);
+  logger.info(`Total unique playlist items: ${uniqueItems.length}`);
 
   return uniqueItems;
 }

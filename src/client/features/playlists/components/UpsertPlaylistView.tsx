@@ -5,7 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import _ from "lodash";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
-import { Layout } from "../../../components/layout";
+import { Layout } from "../../../components/Layout";
 import { LoadingView } from "../../../components/LoadingView";
 import { ValidatedUrlInput } from "../../../components/ValidatedUrlInput";
 import * as playlistsService from "../playlists.service";

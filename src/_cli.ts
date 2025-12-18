@@ -1,4 +1,5 @@
 import { search } from "@inquirer/prompts";
+import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import * as usersService from "@modules/users/users.service";
 import { buildPlaylist } from "@tasks/build-playlist";
@@ -40,9 +41,9 @@ async function rebuildPlaylistCommand() {
 }
 
 async function schedulePlaylistsCommand() {
-  console.log("Scheduling playlists...");
+  logger.info("Scheduling playlists...");
   await schedulePlaylists();
-  console.log("Playlists scheduled.");
+  logger.info("Playlists scheduled.");
 }
 
 async function selectCommand(): Promise<Command | null> {
@@ -57,7 +58,7 @@ async function selectCommand(): Promise<Command | null> {
 }
 
 async function main() {
-  console.log("Starting CLI...");
+  logger.info("Starting CLI...");
   const command = await selectCommand();
   switch (command) {
     case Command.REBUILD_PLAYLIST:
@@ -76,7 +77,7 @@ main();
 
 process.on("uncaughtException", (error) => {
   if (error instanceof Error && error.name === "ExitPromptError") {
-    console.log("👋 Bye!");
+    logger.info("👋 Bye!");
   } else {
     // Rethrow unknown errors
     throw error;

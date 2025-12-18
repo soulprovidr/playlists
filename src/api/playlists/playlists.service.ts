@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@context";
 import { jobs } from "@jobs";
+import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import {
   BuildCadence,
@@ -50,7 +51,10 @@ export const buildPlaylistByPlaylistConfigId = async (
           buildStatus: BuildStatus.COMPLETED,
         });
       } catch (error) {
-        console.error(`Failed to build playlist ${playlistConfigId}:`, error);
+        logger.error(
+          { err: error },
+          `Failed to build playlist ${playlistConfigId}`,
+        );
         // Set status to ERRORED on error
         await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
           buildStatus: BuildStatus.ERRORED,
@@ -59,13 +63,13 @@ export const buildPlaylistByPlaylistConfigId = async (
     },
     {
       onSuccess: (jobId) =>
-        console.log(
+        logger.info(
           `Playlist ${playlistConfigId} built successfully (${jobId})`,
         ),
       onError: (jobId, error) =>
-        console.error(
-          `Playlist ${playlistConfigId} build failed (${jobId}):`,
-          error,
+        logger.error(
+          { err: error },
+          `Playlist ${playlistConfigId} build failed (${jobId})`,
         ),
     },
   );

@@ -1,3 +1,5 @@
+import { logger } from "@logger";
+
 type Job = () => Promise<void> | void;
 
 interface JobOptions {
@@ -23,7 +25,7 @@ export class JobQueue {
     // Start processing if not already running
     if (!this.processing) {
       this.process().catch((error) => {
-        console.error("Job queue processing error:", error);
+        logger.error({ err: error }, "Job queue processing error");
       });
     }
 
@@ -47,7 +49,7 @@ export class JobQueue {
         options?.onSuccess?.(id);
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
-        console.error(`Job ${id} failed:`, err);
+        logger.error({ err }, `Job ${id} failed`);
         options?.onError?.(id, err);
       }
     }

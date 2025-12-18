@@ -1,12 +1,13 @@
 import { env } from "@env";
-import * as fs from "fs";
+import { logger } from "@logger";
+import fs from "fs";
 
-async function migrateClean(): Promise<void> {
+async function migrateClean() {
   try {
     fs.rmSync(env.DATABASE_PATH);
-    console.log(`Deleted database: ${env.DATABASE_PATH}`);
+    logger.info(`Deleted database: ${env.DATABASE_PATH}`);
   } catch (e) {
-    console.error(e);
+    logger.error(e);
   }
 }
 

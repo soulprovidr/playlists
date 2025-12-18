@@ -1,6 +1,7 @@
 import { Route, Switch } from "wouter";
 import { LoginView, LogoutView } from "../features/auth";
 import { DashboardView } from "../features/dashboard";
+import { DebugView } from "../features/debug";
 import { PlaylistView, UpsertPlaylistView } from "../features/playlists";
 
 export const AppRoutes = () => (
@@ -27,6 +28,10 @@ export const AppRoutes = () => (
 
     <Route path="/playlists/:playlistId">
       {(params) => <PlaylistView playlistId={params.playlistId} />}
+    </Route>
+
+    <Route path="/debug">
+      <DebugView />
     </Route>
   </Switch>
 );
