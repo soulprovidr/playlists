@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Header } from "../../components/Layout/Header";
 
 interface LogEntry {
   log?: string;
@@ -78,20 +79,15 @@ export const DebugView = () => {
   return (
     <div className="flex h-screen flex-col bg-base-200">
       {/* Header */}
-      <div className="navbar bg-base-100 shadow-lg">
-        <div className="flex-1">
-          <h1 className="text-xl font-bold">Debug Console</h1>
-        </div>
-        <div className="flex-none gap-2">
-          <div className="flex items-center gap-2">
+      <Header>
+        <div className="flex items-center gap-2">
+          <div
+            className={`badge ${isConnected ? "badge-success" : "badge-error"} gap-2`}
+          >
             <div
-              className={`badge ${isConnected ? "badge-success" : "badge-error"} gap-2`}
-            >
-              <div
-                className={`h-2 w-2 rounded-full ${isConnected ? "bg-success-content" : "bg-error-content"}`}
-              />
-              {isConnected ? "Connected" : "Disconnected"}
-            </div>
+              className={`h-2 w-2 rounded-full ${isConnected ? "bg-success-content" : "bg-error-content"}`}
+            />
+            {isConnected ? "Connected" : "Disconnected"}
           </div>
           <label className="label cursor-pointer gap-2">
             <span className="label-text">Auto-scroll</span>
@@ -131,18 +127,10 @@ export const DebugView = () => {
             Clear
           </button>
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="stats shadow">
-        <div className="stat">
-          <div className="stat-title">Total Logs</div>
-          <div className="stat-value text-primary">{logs.length}</div>
-        </div>
-      </div>
+      </Header>
 
       {/* Logs Container */}
-      <div className="flex-1 overflow-hidden p-4">
+      <div className="flex-1 overflow-hidden p-4 mt-16">
         <div className="h-full overflow-y-auto rounded-lg bg-base-300 p-4 font-mono text-sm">
           {logs.length === 0 ? (
             <div className="flex h-full items-center justify-center text-base-content/50">
