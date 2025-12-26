@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Header } from "../../components/Layout/Header";
+import { Header } from "../../../components/Layout/Header";
 
 interface LogEntry {
   log?: string;

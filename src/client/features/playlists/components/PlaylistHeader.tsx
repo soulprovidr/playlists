@@ -22,7 +22,7 @@ export const PlaylistHeader = ({ playlist }: PlaylistHeaderProps) => {
     onMutate: () => {
       // Invalidate the playlist query to trigger a refetch
       queryClient.invalidateQueries({
-        queryKey: ["playlists", String(playlist?.id)],
+        queryKey: ["playlists", playlist?.id],
       });
     },
     onSuccess: () => {},

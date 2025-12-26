@@ -1,1 +1,1 @@
-export { DebugView } from "./DebugView";
+export { DebugView } from "./components/DebugView";

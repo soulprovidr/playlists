@@ -1,8 +1,8 @@
 import { LocalDate } from "@js-joda/core";
-import { PlaylistItem } from "@lib/playlist-item-extraction";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSource,
@@ -23,11 +23,11 @@ async function getPlaylistItems(
   switch (source.type) {
     case PlaylistSourceType.REDDIT: {
       const config = source.config as RedditSourceConfig;
-      return await redditService.extractPlaylistItems(config);
+      return redditService.getPlaylistItems(config);
     }
     case PlaylistSourceType.RSS: {
       const config = source.config as RssSourceConfig;
-      return await rssService.extractPlaylistItems(config);
+      return rssService.getPlaylistItems(config);
     }
     default:
       logger.warn(`[buildPlaylist] Unsupported source type: ${source.type}`);

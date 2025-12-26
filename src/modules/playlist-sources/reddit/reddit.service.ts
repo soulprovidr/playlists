@@ -1,14 +1,8 @@
-import { env } from "@env";
-import {
-  generateExtractionPrompt,
-  PlaylistItem,
-  PlaylistItemResponse,
-  PlaylistItemResponseSchema,
-} from "@lib/playlist-item-extraction";
 import { logger } from "@logger";
+import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
 import axios from "axios";
 import _ from "lodash";
-import OpenAI from "openai";
 import {
   RedditSourceConfig,
   RedditSourceType,
@@ -31,10 +25,8 @@ interface RedditListing {
 
 // Configuration constants for performance tuning
 const CONCURRENT_COMMENT_BATCH_SIZE = 5; // Number of posts to fetch comments from concurrently
-const OPENAI_CONTENT_BATCH_SIZE = 100; // Number of text items to send to OpenAI per request
+const CONTENT_BATCH_SIZE = 100; // Number of text items to attempt to parse per request
 const RATE_LIMIT_DELAY_MS = 100; // Delay between batches to respect rate limits
-
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
 
 /**
  * Fetches a page of posts from Reddit
@@ -185,52 +177,11 @@ async function fetchUserPosts(
 }
 
 /**
- * Uses OpenAI to extract playlist items from text content
- */
-async function extractPlaylistItemsFromText(
-  content: string[],
-): Promise<PlaylistItem[]> {
-  if (content.length === 0) {
-    return [];
-  }
-
-  const prompt = generateExtractionPrompt(content);
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "playlist_items",
-          schema: PlaylistItemResponseSchema,
-          strict: true,
-        },
-      },
-    });
-
-    const responseContent = response.choices[0].message.content?.trim();
-    if (!responseContent) {
-      return [];
-    }
-
-    const { playlist_items } = JSON.parse(
-      responseContent,
-    ) as PlaylistItemResponse;
-    return playlist_items;
-  } catch (error) {
-    logger.error({ err: error }, "Failed to extract playlist items from text");
-    return [];
-  }
-}
-
-/**
  * Extracts playlist items from a Reddit source
  * For subreddits: fetches last 3 pages of posts and all comments
  * For users: fetches last 3 pages of posts and all comments
  */
-export async function extractPlaylistItems(
+export async function getPlaylistItems(
   config: RedditSourceConfig,
 ): Promise<PlaylistItem[]> {
   logger.info(
@@ -263,7 +214,7 @@ export async function extractPlaylistItems(
   for (let i = 0; i < postBatches.length; i++) {
     const batch = postBatches[i];
     logger.info(
-      `Fetching comments for batch ${i + 1}/${postBatches.length} (${batch.length} posts)`,
+      `[reddit] Fetching comments for batch ${i + 1}/${postBatches.length} (${batch.length} posts)`,
     );
 
     // Fetch all comments for posts in this batch concurrently
@@ -286,17 +237,20 @@ export async function extractPlaylistItems(
   logger.info(`[reddit] Found ${allComments.length} comments`);
 
   // Extract playlist items from titles
-  const itemsFromTitles = await extractPlaylistItemsFromText(postTitles);
+  const itemsFromTitles =
+    await playlistItemsService.getPlaylistItemsFromText(postTitles);
   logger.info(
     `[reddit] Extracted ${itemsFromTitles.length} items from post titles`,
   );
 
   // Extract playlist items from comments (in batches to avoid token limits)
-  const commentBatches = _.chunk(allComments, OPENAI_CONTENT_BATCH_SIZE);
+  const commentBatches = _.chunk(allComments, CONTENT_BATCH_SIZE);
   const itemsFromComments: PlaylistItem[] = [];
 
   for (let i = 0; i < commentBatches.length; i++) {
-    const batchItems = await extractPlaylistItemsFromText(commentBatches[i]);
+    const batchItems = await playlistItemsService.getPlaylistItemsFromText(
+      commentBatches[i],
+    );
     itemsFromComments.push(...batchItems);
     logger.info(
       `[reddit] Extracted ${batchItems.length} items from comment batch ${i + 1}/${commentBatches.length}`,

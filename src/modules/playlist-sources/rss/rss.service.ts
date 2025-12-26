@@ -1,159 +1,37 @@
-import { env } from "@env";
-import {
-  generateExtractionPrompt,
-  PlaylistItem,
-  PlaylistItemResponse,
-  PlaylistItemResponseSchema,
-} from "@lib/playlist-item-extraction";
 import { logger } from "@logger";
-import axios from "axios";
+import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
 import _ from "lodash";
-import OpenAI from "openai";
-import { parseStringPromise } from "xml2js";
+import RssParser from "rss-parser";
 import { RssSourceConfig } from "../playlist-sources.types";
 
 // Configuration constants for performance tuning
-const OPENAI_CONTENT_BATCH_SIZE = 100; // Number of text items to send to OpenAI per request
+const CONTENT_BATCH_SIZE = 100; // Number of text items to send to OpenAI per request
 const RATE_LIMIT_DELAY_MS = 1000; // Delay between batches to respect rate limits
 
-const openai = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+const parser = new RssParser();
 
-/**
- * Fetches RSS feed content
- */
-async function fetchRssFeed(url: string): Promise<string> {
-  const { data } = await axios.get<string>(url, {
-    headers: {
-      "User-Agent": "Playlists-App/1.0",
-    },
-  });
-  return data;
-}
-
-/**
- * Extracts text content from RSS feed items
- */
-async function extractRssContent(xmlContent: string): Promise<string[]> {
-  try {
-    const parsed = await parseStringPromise(xmlContent);
-    const content: string[] = [];
-
-    // Handle RSS 2.0 format
-    if (parsed.rss?.channel?.[0]?.item) {
-      for (const item of parsed.rss.channel[0].item) {
-        if (item.title?.[0]) {
-          content.push(item.title[0]);
-        }
-        if (item.description?.[0]) {
-          // Strip HTML tags from description
-          const description = item.description[0].replace(/<[^>]*>/g, "");
-          content.push(description);
-        }
-      }
-    }
-
-    // Handle Atom format
-    if (parsed.feed?.entry) {
-      for (const entry of parsed.feed.entry) {
-        if (entry.title?.[0]) {
-          const title =
-            typeof entry.title[0] === "string"
-              ? entry.title[0]
-              : entry.title[0]._;
-          content.push(title);
-        }
-        if (entry.content?.[0]) {
-          const contentText =
-            typeof entry.content[0] === "string"
-              ? entry.content[0]
-              : entry.content[0]._;
-          // Strip HTML tags
-          const stripped = contentText.replace(/<[^>]*>/g, "");
-          content.push(stripped);
-        }
-        if (entry.summary?.[0]) {
-          const summary =
-            typeof entry.summary[0] === "string"
-              ? entry.summary[0]
-              : entry.summary[0]._;
-          const stripped = summary.replace(/<[^>]*>/g, "");
-          content.push(stripped);
-        }
-      }
-    }
-
-    return content;
-  } catch (error) {
-    logger.error({ err: error }, "Failed to parse RSS feed");
-    return [];
-  }
-}
-
-/**
- * Uses OpenAI to extract playlist items from text content
- */
-async function extractPlaylistItemsFromText(
-  content: string[],
-): Promise<PlaylistItem[]> {
-  if (content.length === 0) {
-    return [];
-  }
-
-  const prompt = generateExtractionPrompt(content);
-
-  try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-5-mini",
-      messages: [{ role: "user", content: prompt }],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "playlist_items",
-          schema: PlaylistItemResponseSchema,
-          strict: true,
-        },
-      },
-    });
-
-    const responseContent = response.choices[0].message.content?.trim();
-    if (!responseContent) {
-      return [];
-    }
-
-    const { playlist_items } = JSON.parse(
-      responseContent,
-    ) as PlaylistItemResponse;
-    return playlist_items;
-  } catch (error) {
-    logger.error({ err: error }, "Failed to extract playlist items from text");
-    return [];
-  }
-}
-
-/**
- * Extracts playlist items from an RSS feed
- */
-export async function extractPlaylistItems(
+export async function getPlaylistItems(
   config: RssSourceConfig,
 ): Promise<PlaylistItem[]> {
-  logger.info(`Extracting playlist items from RSS feed: ${config.feedUrl}`);
-
-  // Fetch RSS feed
-  const xmlContent = await fetchRssFeed(config.feedUrl);
-
-  // Extract text content from feed items
-  const content = await extractRssContent(xmlContent);
-  logger.info(`Found ${content.length} content items from RSS feed`);
+  const { items } = await parser.parseURL(config.feedUrl);
+  logger.info(`[rss] Found ${items.length} content items from RSS feed`);
 
   // Extract playlist items from content (in batches to avoid token limits)
-  const contentBatches = _.chunk(content, OPENAI_CONTENT_BATCH_SIZE);
+  const contentBatches = _.chunk(items, CONTENT_BATCH_SIZE);
   const allItems: PlaylistItem[] = [];
 
   for (let i = 0; i < contentBatches.length; i++) {
-    const batchItems = await extractPlaylistItemsFromText(contentBatches[i]);
+    const batchItems = await playlistItemsService.getPlaylistItemsFromText(
+      JSON.stringify(contentBatches[i]),
+      `
+        - Ignore the "creator" or "author" fields – these represent the names of the author of the post, NOT the artist being referenced by the post.
+        - Attempt to infer the artist name from the post URL or any available image URL. For example, if the post URL is "https://pitchfork.com/reviews/tracks/rooster-nuketown-blues/" and the title is "Nuketown Blues", the artist is likely "rooster".
+      `,
+    );
     allItems.push(...batchItems);
     logger.info(
-      `Extracted ${batchItems.length} items from batch ${i + 1}/${contentBatches.length}`,
+      `[rss] Extracted ${batchItems.length} items from batch ${i + 1}/${contentBatches.length}`,
     );
 
     // Rate limiting: wait between OpenAI calls
@@ -167,8 +45,6 @@ export async function extractPlaylistItems(
     allItems,
     (item) => `${item.artist.toLowerCase()}-${item.title.toLowerCase()}`,
   );
-
-  console.log(`Total unique playlist items: ${uniqueItems.length}`);
 
   return uniqueItems;
 }
