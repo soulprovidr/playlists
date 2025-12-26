@@ -34,6 +34,7 @@ export interface PlaylistConfigsTable {
     BuildCadence
   >;
   buildDay: string | null;
+  lastBuiltDate: string | null;
   createdAt: ColumnType<string, never, never>;
   updatedAt: ColumnType<string, never, never>;
 }

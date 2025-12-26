@@ -14,6 +14,7 @@ export interface PlaylistViewResponse {
   buildStatus: BuildStatus;
   buildCadence: BuildCadence;
   buildDay: string | null;
+  lastBuiltDate: string | null;
   createdAt: string;
   updatedAt: string;
   sources: PlaylistSource[];

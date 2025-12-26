@@ -41,9 +41,7 @@ async function rebuildPlaylistCommand() {
 }
 
 async function schedulePlaylistsCommand() {
-  logger.info("Scheduling playlists...");
   await schedulePlaylists();
-  logger.info("Playlists scheduled.");
 }
 
 async function selectCommand(): Promise<Command | null> {
@@ -51,14 +49,13 @@ async function selectCommand(): Promise<Command | null> {
     message: "What would you like to do?",
     source: () => [
       { name: "Rebuild a playlist", value: Command.REBUILD_PLAYLIST },
-      { name: "Scheduling playlists", value: Command.SCHEDULE_PLAYLISTS },
+      { name: "Schedule playlists", value: Command.SCHEDULE_PLAYLISTS },
       { name: "Exit", value: null },
     ],
   });
 }
 
 async function main() {
-  logger.info("Starting CLI...");
   const command = await selectCommand();
   switch (command) {
     case Command.REBUILD_PLAYLIST:

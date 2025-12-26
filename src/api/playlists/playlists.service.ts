@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@context";
 import { jobs } from "@jobs";
+import { LocalDate } from "@js-joda/core";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import {
@@ -46,9 +47,10 @@ export const buildPlaylistByPlaylistConfigId = async (
     async () => {
       try {
         await buildPlaylist(playlistConfig.id);
-        // Set status to COMPLETED on success
+        // Set status to COMPLETED and update last built date on success
         await playlistConfigsService.updatePlaylistConfig(playlistConfigId, {
           buildStatus: BuildStatus.COMPLETED,
+          lastBuiltDate: LocalDate.now().toString(),
         });
       } catch (error) {
         logger.error(
@@ -106,6 +108,7 @@ export const getPlaylistView = async (
     buildStatus: playlistConfig.buildStatus,
     buildCadence: playlistConfig.buildCadence,
     buildDay: playlistConfig.buildDay,
+    lastBuiltDate: playlistConfig.lastBuiltDate,
     createdAt: playlistConfig.createdAt,
     updatedAt: playlistConfig.updatedAt,
     sources: playlistSources,

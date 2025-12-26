@@ -23,7 +23,9 @@ export const PlaylistItemResponseSchema = {
   additionalProperties: false,
 } as const;
 
-export type PlaylistItemResponse = FromSchema<typeof PlaylistItemResponseSchema>;
+export type PlaylistItemResponse = FromSchema<
+  typeof PlaylistItemResponseSchema
+>;
 
 export interface PlaylistItem {
   artist: string;
@@ -35,17 +37,41 @@ export interface PlaylistItem {
  */
 export function generateExtractionPrompt(content: string[]): string {
   return `
-Extract an array of objects with artist and song title from the following content.
+    You are a text extraction and normalization engine.
 
-## Guidelines
-1. Strip all years from the song title (e.g. "1980", "(1980)", "[1980]", etc.).
-2. Strip all non-alphanumeric characters from the song title (e.g. "!", "?", "#", etc.)
-3. Strip all non-alphanumeric characters from the artist name (e.g. "!", "?", "#", etc.)
-4. Replace all non-English characters with their English equivalents (e.g. "é" -> "e", "á" -> "a", etc.)
-5. Verify that a real song belonging to the artist exists.
-6. Only extract content that appears to be music-related (artist + song format).
+    Your task is to extract musical artist–song title pairs from the input content below. The input may be stringified JSON representing heterogeneous entities (e.g. RSS items, Reddit posts, Reddit comments) and may contain irrelevant or non-music text.
 
-Content to analyze:
-${content.join("\n---\n")}
+    ## OUTPUT REQUIREMENTS
+    - Return only a valid JSON array.
+    - Each item must be an object with the exact schema:
+      { "artist": "string", "title": "string" }
+    - Do not include any additional text, explanations, or formatting.
+
+    ## EXTRACTION RULES
+    -Only extract entries that clearly refer to a musical recording (song or track) by a musical artist.
+
+    - Ignore:
+      - Albums, playlists, genres, radio shows
+      - Non-musical creators (e.g. podcasters, YouTubers, DJs unless referencing a specific song)
+      - Mentions where either the artist or song is ambiguous or missing
+
+    ## NORMALIZATION RULES
+    - Apply all normalization steps after extraction:
+      - Song title:
+        - Remove all years and year annotations (e.g. 1980, (1980), [1980], - 1980 remaster)
+        - Remove all non-alphanumeric characters, excluding spaces (e.g. "!", "?", "#", etc.)
+      - Artist name:
+        - Remove all non-alphanumeric characters, excluding spaces (e.g. "!", "?", "#", etc.)
+      - Character normalization:
+        - Replace all non-English characters with their closest ASCII equivalents (e.g. é → e, á → a, ö → o, ß → ss)
+      - Casing:
+        - Preserve original casing where possible
+
+    ## DEDUPLICATION
+    - If the same artist–title pair appears multiple times, include it only once.
+
+    ## INPUT
+    Extract from the following content:
+    ${content.join("\n---\n")}
   `.trim();
 }

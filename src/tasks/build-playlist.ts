@@ -1,6 +1,8 @@
+import { LocalDate } from "@js-joda/core";
 import { PlaylistItem } from "@lib/playlist-item-extraction";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
+import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSource,
@@ -28,7 +30,7 @@ async function getPlaylistItems(
       return await rssService.extractPlaylistItems(config);
     }
     default:
-      logger.warn(`Unsupported source type: ${source.type}`);
+      logger.warn(`[buildPlaylist] Unsupported source type: ${source.type}`);
       return [];
   }
 }
@@ -38,13 +40,15 @@ export async function buildPlaylist(playlistConfigId: number) {
     await playlistConfigsService.getPlaylistConfigById(playlistConfigId);
   if (!playlistConfig) {
     throw new Error(
-      `No matching playlist config found for ${playlistConfigId}`,
+      `[buildPlaylist] No matching playlist config found for ${playlistConfigId}`,
     );
   }
 
   const user = await usersService.getUserById(playlistConfig.userId);
   if (!user) {
-    throw new Error(`No matching user found for ${playlistConfig.userId}`);
+    throw new Error(
+      `[buildPlaylist] No matching user found for ${playlistConfig.userId}`,
+    );
   }
 
   const spotifyApi = await spotifyApiService.getInstance(user.id);
@@ -55,7 +59,7 @@ export async function buildPlaylist(playlistConfigId: number) {
     ]);
 
   try {
-    logger.info("Extracting PlaylistItems...");
+    logger.info("[buildPlaylist] Extracting PlaylistItems...");
     const playlistItems: PlaylistItem[] = [];
 
     for (const source of playlistSources) {
@@ -63,7 +67,7 @@ export async function buildPlaylist(playlistConfigId: number) {
       playlistItems.push(...items);
     }
 
-    logger.info(`Found ${playlistItems.length} PlaylistItems.`);
+    logger.info(`[buildPlaylist] Found ${playlistItems.length} PlaylistItems.`);
 
     const trackUriPromises: (() => Promise<string | null>)[] = _.chain(
       playlistItems,
@@ -73,29 +77,45 @@ export async function buildPlaylist(playlistConfigId: number) {
           backOff(
             async () => {
               logger.info(
-                `Searching for Spotify track: ${item.artist} - ${item.title}`,
+                `[buildPlaylist] Searching for Spotify track: ${item.artist} - ${item.title}`,
               );
-              const searchResult = await spotifyApi.searchTracks(
-                `${item.artist} ${item.title}`,
-              );
+              try {
+                const searchResult = await spotifyApi.searchTracks(
+                  `${item.artist} ${item.title}`,
+                );
 
-              if (searchResult.statusCode === 401) {
-                await spotifyApi.refreshAccessToken();
-                throw new Error("Token expired. Refreshing token...");
+                if (
+                  !searchResult.body.tracks ||
+                  searchResult.body.tracks.items.length === 0
+                ) {
+                  return null;
+                }
+
+                return searchResult.body.tracks.items[0].uri;
+              } catch (error) {
+                // @ts-expect-error Spotify API error
+                const { message, statusCode } = error;
+
+                switch (statusCode) {
+                  case 401:
+                    logger.warn(
+                      `[buildPlaylist] Token expired. Refreshing token...`,
+                    );
+                    await spotifyApi.refreshAccessToken();
+                    break;
+                  case 429:
+                    logger.warn(`[buildPlaylist] Rate limit reached.`);
+                    break;
+                  default:
+                    logger.warn(
+                      { err: error },
+                      `[buildPlaylist] Error searching for track: ${message}`,
+                    );
+                    break;
+                }
+
+                throw new Error();
               }
-
-              if (searchResult.statusCode === 429) {
-                throw new Error("Rate limit reached.");
-              }
-
-              if (
-                !searchResult.body.tracks ||
-                searchResult.body.tracks.items.length === 0
-              ) {
-                return null;
-              }
-
-              return searchResult.body.tracks.items[0].uri;
             },
             { numOfAttempts: 5 },
           ),
@@ -109,12 +129,17 @@ export async function buildPlaylist(playlistConfigId: number) {
         if (trackUri) {
           trackUris.push(trackUri);
         }
-      } catch (error) {
-        logger.error({ err: error }, "Failed to get track URI");
+      } catch {
+        logger.error(`[buildPlaylist] Error finding track.`);
       }
     }
 
-    logger.info(`Found ${trackUris.length} songs on Spotify.`);
+    if (!trackUris.length) {
+      logger.error(`[buildPlaylist] No tracks found for playlist.`);
+      throw new Error();
+    }
+
+    logger.info(`[buildPlaylist] Found ${trackUris.length} tracks on Spotify.`);
 
     const chunkedTrackUris: string[][] = _.chain(trackUris)
       .shuffle()
@@ -135,7 +160,18 @@ export async function buildPlaylist(playlistConfigId: number) {
         );
       }
     }
+
+    logger.info(
+      `[buildPlaylist] Playlist ${playlistConfig.name} built successfully.`,
+    );
+    await playlistConfigsService.updatePlaylistConfig(playlistConfig.id, {
+      buildStatus: BuildStatus.COMPLETED,
+      lastBuiltDate: LocalDate.now().toString(),
+    });
   } catch (error) {
-    logger.error({ err: error }, "Failed to build playlist");
+    logger.error({ err: error }, "[buildPlaylist] Failed to build playlist.");
+    await playlistConfigsService.updatePlaylistConfig(playlistConfig.id, {
+      buildStatus: BuildStatus.ERRORED,
+    });
   }
 }
