@@ -4,19 +4,23 @@ import { Instant, ZoneId } from "@js-joda/core";
 import * as spotifyAccessTokensService from "@modules/spotify/spotify-access-tokens/spotify-access-tokens.service";
 import SpotifyWebApi from "spotify-web-api-node";
 
-export const getInstance = async (userId?: number): Promise<SpotifyWebApi> => {
+export async function getInstance(
+  spotifyUserId?: string,
+): Promise<SpotifyWebApi> {
   const spotifyApi = new SpotifyWebApi({
     clientId: env.SPOTIFY_CLIENT_ID,
     clientSecret: env.SPOTIFY_CLIENT_SECRET,
     redirectUri: env.SPOTIFY_REDIRECT_URI,
   });
 
-  if (!userId) {
+  if (!spotifyUserId) {
     return spotifyApi;
   }
 
   const spotifyAccessToken =
-    await spotifyAccessTokensService.getSpotifyAccessTokenByUserId(userId);
+    await spotifyAccessTokensService.getSpotifyAccessTokenBySpotifyUserId(
+      spotifyUserId,
+    );
 
   if (spotifyAccessToken) {
     spotifyApi.setCredentials({
@@ -34,7 +38,7 @@ export const getInstance = async (userId?: number): Promise<SpotifyWebApi> => {
       if (res.statusCode === 200) {
         await spotifyAccessTokensService.upsertSpotifyAccessToken({
           id: spotifyAccessToken.id,
-          userId: spotifyAccessToken.userId,
+          spotifyUserId: spotifyAccessToken.spotifyUserId,
           accessToken: res.body.access_token,
           refreshToken:
             res.body.refresh_token || spotifyAccessToken.refreshToken,
@@ -49,4 +53,4 @@ export const getInstance = async (userId?: number): Promise<SpotifyWebApi> => {
   }
 
   return spotifyApi;
-};
+}

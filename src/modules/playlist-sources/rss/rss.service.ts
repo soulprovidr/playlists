@@ -11,7 +11,7 @@ const RATE_LIMIT_DELAY_MS = 1000; // Delay between batches to respect rate limit
 
 const parser = new RssParser();
 
-export async function getPlaylistItems(
+export async function getTextContent(
   config: RssSourceConfig,
 ): Promise<PlaylistItem[]> {
   const { items } = await parser.parseURL(config.feedUrl);

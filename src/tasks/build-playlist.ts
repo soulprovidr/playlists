@@ -1,3 +1,4 @@
+import { getSpotifyUserId } from "@config";
 import { LocalDate } from "@js-joda/core";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
@@ -13,7 +14,6 @@ import {
 import * as redditService from "@modules/playlist-sources/reddit/reddit.service";
 import * as rssService from "@modules/playlist-sources/rss/rss.service";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
-import * as usersService from "@modules/users/users.service";
 import { backOff } from "exponential-backoff";
 import _ from "lodash";
 
@@ -27,7 +27,7 @@ async function getPlaylistItems(
     }
     case PlaylistSourceType.RSS: {
       const config = source.config as RssSourceConfig;
-      return rssService.getPlaylistItems(config);
+      return rssService.getTextContent(config);
     }
     default:
       logger.warn(`[buildPlaylist] Unsupported source type: ${source.type}`);
@@ -44,14 +44,14 @@ export async function buildPlaylist(playlistConfigId: number) {
     );
   }
 
-  const user = await usersService.getUserById(playlistConfig.userId);
-  if (!user) {
+  const spotifyUserId = getSpotifyUserId();
+  if (!spotifyUserId) {
     throw new Error(
-      `[buildPlaylist] No matching user found for ${playlistConfig.userId}`,
+      `[buildPlaylist] No spotifyUserId configured in config.yml`,
     );
   }
 
-  const spotifyApi = await spotifyApiService.getInstance(user.id);
+  const spotifyApi = await spotifyApiService.getInstance(spotifyUserId);
 
   const playlistSources =
     await playlistSourcesService.getPlaylistSourcesByPlaylistConfigIds([
@@ -162,7 +162,7 @@ export async function buildPlaylist(playlistConfigId: number) {
     }
 
     logger.info(
-      `[buildPlaylist] Playlist ${playlistConfig.name} built successfully.`,
+      `[buildPlaylist] Playlist ${playlistConfig.spotifyPlaylistId} built successfully.`,
     );
     await playlistConfigsService.updatePlaylistConfig(playlistConfig.id, {
       buildStatus: BuildStatus.COMPLETED,

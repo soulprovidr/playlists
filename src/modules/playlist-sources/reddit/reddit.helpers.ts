@@ -10,7 +10,7 @@ import { RedditValidationResult } from "./reddit.types";
  * - Subreddit URLs: https://reddit.com/r/subreddit or https://www.reddit.com/r/subreddit
  * - User URLs: https://reddit.com/user/username, https://reddit.com/u/username
  */
-export const validateRedditUrl = (url: string): RedditValidationResult => {
+export function validateRedditUrl(url: string): RedditValidationResult {
   try {
     const parsedUrl = new URL(url);
 
@@ -60,12 +60,12 @@ export const validateRedditUrl = (url: string): RedditValidationResult => {
       error: error instanceof Error ? error.message : "Invalid URL format",
     };
   }
-};
+}
 
 /**
  * Checks if a URL is a Reddit URL
  */
-export const isRedditUrl = (url: string): boolean => {
+export function isRedditUrl(url: string): boolean {
   try {
     const parsedUrl = new URL(url);
     return (
@@ -75,12 +75,12 @@ export const isRedditUrl = (url: string): boolean => {
   } catch {
     return false;
   }
-};
+}
 
 /**
  * Gets the Reddit API URL for a given config
  */
-export const getRedditSourceUrl = (config: RedditSourceConfig): string => {
+export function getRedditSourceUrl(config: RedditSourceConfig): string {
   switch (config.type) {
     case RedditSourceType.SUBREDDIT: {
       return `https://www.reddit.com/r/${config.value}.json`;
@@ -91,4 +91,4 @@ export const getRedditSourceUrl = (config: RedditSourceConfig): string => {
     default:
       throw new Error(`Unsupported Reddit source type: ${config.type}`);
   }
-};
+}

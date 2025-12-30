@@ -7,9 +7,9 @@ import { RssValidationResult } from "./rss.types";
  * - Content-Type header for XML/RSS/Atom indicators
  * - URL patterns (.rss, .xml, /feed)
  */
-export const validateRssUrl = async (
+export async function validateRssUrl(
   url: string,
-): Promise<RssValidationResult> => {
+): Promise<RssValidationResult> {
   try {
     // Attempt to fetch the URL with HEAD request to check accessibility
     const response = await fetch(url, {
@@ -49,12 +49,12 @@ export const validateRssUrl = async (
       error: error instanceof Error ? error.message : "Failed to validate URL",
     };
   }
-};
+}
 
 /**
  * Checks if a URL or content type indicates an RSS/Atom feed
  */
-export const isLikelyRssFeed = (url: string, contentType?: string): boolean => {
+export function isLikelyRssFeed(url: string, contentType?: string): boolean {
   // Check content type
   if (contentType) {
     if (
@@ -74,4 +74,4 @@ export const isLikelyRssFeed = (url: string, contentType?: string): boolean => {
     lowerUrl.includes("/feed") ||
     lowerUrl.includes("/rss")
   );
-};
+}

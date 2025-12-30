@@ -5,43 +5,45 @@ import {
   SpotifyAccessTokenUpdate,
 } from "./spotify-access-tokens.types";
 
-export const getSpotifyAccessTokenByUserId = async (
-  userId: number,
-): Promise<SpotifyAccessToken | undefined> => {
-  return spotifyAccessTokensRepo.getSpotifyAccessTokenByUserId(userId);
-};
+export async function getSpotifyAccessTokenBySpotifyUserId(
+  spotifyUserId: string,
+): Promise<SpotifyAccessToken | undefined> {
+  return spotifyAccessTokensRepo.getSpotifyAccessTokenBySpotifyUserId(
+    spotifyUserId,
+  );
+}
 
-export const insertSpotifyAccessToken = async (
+export async function insertSpotifyAccessToken(
   spotifyAccessTokenInsert: SpotifyAccessTokenInsert,
-): Promise<number> => {
+): Promise<number> {
   return spotifyAccessTokensRepo.insertSpotifyAccessToken(
     spotifyAccessTokenInsert,
   );
-};
+}
 
-export const updateSpotifyAccessTokenByUserId = async (
-  userId: number,
+export async function updateSpotifyAccessTokenBySpotifyUserId(
+  spotifyUserId: string,
   spotifyAccessTokenUpdate: SpotifyAccessTokenUpdate,
-): Promise<void> => {
-  return spotifyAccessTokensRepo.updateSpotifyAccessTokenByUserId(
-    userId,
+): Promise<void> {
+  return spotifyAccessTokensRepo.updateSpotifyAccessTokenBySpotifyUserId(
+    spotifyUserId,
     spotifyAccessTokenUpdate,
   );
-};
+}
 
-export const upsertSpotifyAccessToken = async (
+export async function upsertSpotifyAccessToken(
   spotifyAccessTokenUpsert: SpotifyAccessTokenInsert,
-): Promise<void> => {
-  const spotifyAccessToken = await getSpotifyAccessTokenByUserId(
-    spotifyAccessTokenUpsert.userId,
+): Promise<void> {
+  const spotifyAccessToken = await getSpotifyAccessTokenBySpotifyUserId(
+    spotifyAccessTokenUpsert.spotifyUserId,
   );
   if (spotifyAccessToken) {
-    await updateSpotifyAccessTokenByUserId(
-      spotifyAccessTokenUpsert.userId,
+    await updateSpotifyAccessTokenBySpotifyUserId(
+      spotifyAccessTokenUpsert.spotifyUserId,
       spotifyAccessTokenUpsert,
     );
   } else {
     await insertSpotifyAccessToken(spotifyAccessTokenUpsert);
   }
   return;
-};
+}

@@ -1,7 +1,6 @@
 import { apiRoutes } from "@api/api.routes";
-import { authRoutes } from "@api/auth/auth.routes";
-import { serveStatic } from "@hono/node-server/serve-static";
 import { logger } from "@logger";
+import { seedPlaylists } from "@tasks/seed-playlists";
 import { Hono } from "hono";
 import { contextStorage } from "hono/context-storage";
 import { secureHeaders } from "hono/secure-headers";
@@ -19,15 +18,10 @@ app.use(async (c, next) => {
 });
 app.use(secureHeaders());
 app.use(contextStorage());
-app.use(serveStatic({ root: "/dist/client" }));
 
-// Register routes.
-app.route("/auth", authRoutes);
-app.route("/api", apiRoutes);
+app.route("/", apiRoutes);
 
-// Schedule tasks.
 const HOURLY_SCHEDULE = "0 * * * *"; // Run every hour
-
 cron.schedule(HOURLY_SCHEDULE, async () => {
   logger.info("[Scheduler] Running scheduled playlist check...");
   await schedulePlaylists();
@@ -35,6 +29,7 @@ cron.schedule(HOURLY_SCHEDULE, async () => {
 });
 
 // Startup tasks.
+seedPlaylists();
 schedulePlaylists();
 
 export default app;

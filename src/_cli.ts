@@ -1,7 +1,6 @@
 import { search } from "@inquirer/prompts";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import * as usersService from "@modules/users/users.service";
 import { buildPlaylist } from "@tasks/build-playlist";
 import { schedulePlaylists } from "./tasks/schedule-playlists";
 
@@ -13,22 +12,12 @@ enum Command {
 }
 
 async function rebuildPlaylistCommand() {
-  const users = await usersService.getAllUsers();
-  const userId = await search({
-    message: "Select a user",
-    source: () =>
-      users.map((user) => ({
-        name: user.spotifyUserId,
-        value: user.id,
-      })),
-  });
-  const playlistConfigs =
-    await playlistConfigsService.getPlaylistConfigsByUserId(userId);
+  const playlistConfigs = await playlistConfigsService.getAllPlaylistConfigs();
   const playlistConfig = await search({
     message: "Select a playlist",
     source: () => [
       ...playlistConfigs.map((config) => ({
-        name: config.name,
+        name: config.spotifyPlaylistId,
         value: config,
       })),
       { name: "Exit", value: null },

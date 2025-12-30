@@ -12,17 +12,15 @@ import { CreateTableBuilder, sql } from "kysely";
 
 const DATE_TIME_PATTERN = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss");
 
-export const getDatabaseTimestampFromInstant = (
-  instant: Instant | undefined,
-) => {
+export function getDatabaseTimestampFromInstant(instant: Instant | undefined) {
   const zonedDateTime = (instant ? instant : Instant.now()).atZone(ZoneId.UTC);
   return zonedDateTime.format(DATE_TIME_PATTERN);
-};
+}
 
 // Parses in timezone of local machine for now.
-export const getZonedDateTimeFromDatabaseTimestamp = (
+export function getZonedDateTimeFromDatabaseTimestamp(
   timestamp: string | undefined,
-): ZonedDateTime | null => {
+): ZonedDateTime | null {
   try {
     return timestamp
       ? LocalDateTime.parse(timestamp, DATE_TIME_PATTERN).atZone(ZoneId.UTC)
@@ -31,19 +29,19 @@ export const getZonedDateTimeFromDatabaseTimestamp = (
     console.error(e);
     return null;
   }
-};
+}
 
-export const withAutoIncrementingId = (
+export function withAutoIncrementingId(
   qb: CreateTableBuilder<any, any>,
-): CreateTableBuilder<any, any> => {
+): CreateTableBuilder<any, any> {
   return qb.addColumn("id", "integer", (col) =>
     col.primaryKey().autoIncrement(),
   );
-};
+}
 
-export const withTimestamps = (
+export function withTimestamps(
   qb: CreateTableBuilder<any, any>,
-): CreateTableBuilder<any, any> => {
+): CreateTableBuilder<any, any> {
   return qb
     .addColumn("created_at", "varchar", (col) =>
       col.defaultTo(sql`(strftime('%Y-%m-%d %H:%M:%S', 'now'))`).notNull(),
@@ -51,4 +49,4 @@ export const withTimestamps = (
     .addColumn("updated_at", "varchar", (col) =>
       col.defaultTo(sql`(strftime('%Y-%m-%d %H:%M:%S', 'now'))`).notNull(),
     );
-};
+}

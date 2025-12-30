@@ -1,0 +1,54 @@
+# Playlists Application Configuration
+# ===================================
+# This file is read on app startup to seed the database.
+
+# Spotify User ID
+# ---------------
+# The Spotify user ID that owns the playlists.
+# This is required for authentication and playlist management.
+spotifyUserId: ""
+
+# Playlist Configurations
+# -----------------------
+# Playlists are matched by spotifyPlaylistId for upsert operations:
+#   - Existing playlists (matched by spotifyPlaylistId) will be updated
+#   - New playlists will be created
+#   - Build status and last built date are preserved during updates
+
+playlists:
+  []
+  # Example playlist configuration:
+  #
+  # - spotifyPlaylistId: "your-spotify-playlist-id"
+  #   buildCadence: "WEEKLY"     # Options: NONE | WEEKLY
+  #   buildDay: "monday"         # Required if buildCadence is WEEKLY (lowercase day name)
+  #   entityType: "TRACKS"       # Options: TRACKS | ALBUMS
+  #   sources:
+  #     # Reddit subreddit source
+  #     - type: "reddit"
+  #       config:
+  #         type: "subreddit"    # Options: subreddit | user
+  #         value: "indieheads"
+  #
+  #     # Reddit user source
+  #     - type: "reddit"
+  #       config:
+  #         type: "user"
+  #         value: "music_curator_username"
+  #
+  #     # RSS feed source
+  #     - type: "rss"
+  #       config:
+  #         feedUrl: "https://pitchfork.com/feed/feed-album-reviews/rss"
+  #
+  # - spotifyPlaylistId: "another-spotify-playlist-id"
+  #   buildCadence: "WEEKLY"
+  #   buildDay: "friday"
+  #   entityType: "ALBUMS"
+  #   sources:
+  #     - type: "rss"
+  #       config:
+  #         feedUrl: "https://www.theguardian.com/music+tone/albumreview/rss"
+  #     - type: "rss"
+  #       config:
+  #         feedUrl: "https://www.rollingstone.com/music/music-album-reviews/feed/"

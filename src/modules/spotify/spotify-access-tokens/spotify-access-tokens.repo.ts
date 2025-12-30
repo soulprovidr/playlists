@@ -5,33 +5,33 @@ import {
   SpotifyAccessTokenUpdate,
 } from "./spotify-access-tokens.types";
 
-export const getSpotifyAccessTokenByUserId = async (
-  userId: number,
-): Promise<SpotifyAccessToken | undefined> => {
+export async function getSpotifyAccessTokenBySpotifyUserId(
+  spotifyUserId: string,
+): Promise<SpotifyAccessToken | undefined> {
   return database
     .selectFrom("spotifyAccessTokens")
-    .where("userId", "=", userId)
+    .where("spotifyUserId", "=", spotifyUserId)
     .selectAll()
     .executeTakeFirst();
-};
+}
 
-export const insertSpotifyAccessToken = async (
+export async function insertSpotifyAccessToken(
   spotifyAccessTokenInsert: SpotifyAccessTokenInsert,
-): Promise<number> => {
+): Promise<number> {
   const [result] = await database
     .insertInto("spotifyAccessTokens")
     .values(spotifyAccessTokenInsert)
     .execute();
   return Number(result.insertId);
-};
+}
 
-export const updateSpotifyAccessTokenByUserId = async (
-  userId: number,
+export async function updateSpotifyAccessTokenBySpotifyUserId(
+  spotifyUserId: string,
   spotifyAccessTokenUpdate: SpotifyAccessTokenUpdate,
-): Promise<void> => {
+): Promise<void> {
   await database
     .updateTable("spotifyAccessTokens")
     .set(spotifyAccessTokenUpdate)
-    .where("userId", "=", userId)
+    .where("spotifyUserId", "=", spotifyUserId)
     .executeTakeFirst();
-};
+}

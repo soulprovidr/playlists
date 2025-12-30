@@ -11,8 +11,8 @@
     "types": ["vite/client"],
     "paths": {
       "@api/*": ["./src/api/*"],
+      "@config": ["./src/_config"],
       "@context": ["./src/_context"],
-      "@cookies": ["./src/_cookies"],
       "@database": ["./src/_database"],
       "@database/*": ["./src/database/*"],
       "@env": ["./src/_env"],
@@ -20,7 +20,7 @@
       "@lib/*": ["./src/lib/*"],
       "@logger": ["./src/_logger"],
       "@modules/*": ["./src/modules/*"],
-      "@tasks/*": ["./src/tasks/*"]
-    }
-  }
+      "@tasks/*": ["./src/tasks/*"],
+    },
+  },
 }

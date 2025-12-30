@@ -2,7 +2,7 @@ import { ColumnType, Generated, Insertable, Selectable } from "kysely";
 
 export interface SpotifyAccessTokensTable {
   id: Generated<number>;
-  userId: number;
+  spotifyUserId: string;
   accessToken: string;
   refreshToken: string;
   expiresAt: string;

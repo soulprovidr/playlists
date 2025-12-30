@@ -21,7 +21,7 @@ export async function schedulePlaylists(): Promise<void> {
       );
       configsToRebuild.forEach((config) => {
         logger.warn(
-          `[schedulePlaylists] ${config.name} (ID: ${config.id}) - scheduled for ${config.buildDay}, last built: ${config.lastBuiltDate}`,
+          `[schedulePlaylists] ${config.spotifyPlaylistId} (ID: ${config.id}) - scheduled for ${config.buildDay}, last built: ${config.lastBuiltDate}`,
         );
       });
     }
@@ -34,7 +34,7 @@ export async function schedulePlaylists(): Promise<void> {
     // Queue a build job for each config
     for (const config of configsToRebuild) {
       logger.info(
-        `[schedulePlaylists] Queueing build for playlist: ${config.name} (ID: ${config.id})`,
+        `[schedulePlaylists] Queueing build for playlist: ${config.spotifyPlaylistId} (ID: ${config.id})`,
       );
 
       await playlistConfigsService.updatePlaylistConfig(config.id, {

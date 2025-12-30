@@ -7,7 +7,6 @@ export const env = createEnv(
     NODE_ENV: z.enum(["development", "production"]),
     COOKIE_SECRET: z.string(),
     API_URL: z.coerce.string(),
-    CLIENT_URL: z.string(),
 
     // Database.
     DATABASE_PATH: z.string(),

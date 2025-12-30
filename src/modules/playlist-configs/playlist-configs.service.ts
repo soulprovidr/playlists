@@ -5,30 +5,42 @@ import type {
   PlaylistConfigUpdate,
 } from "./playlist-configs.types";
 
-export const getPlaylistConfigsByUserId = async (
-  userId: number,
-): Promise<PlaylistConfig[]> => {
-  return playlistConfigsRepo.getPlaylistConfigsByUserId(userId);
-};
+export function getAllPlaylistConfigs(): Promise<PlaylistConfig[]> {
+  return playlistConfigsRepo.getAllPlaylistConfigs();
+}
 
-export const getPlaylistConfigById = (
+export function getPlaylistConfigById(
   playlistConfigId: number,
-): Promise<PlaylistConfig | undefined> => {
+): Promise<PlaylistConfig | undefined> {
   return playlistConfigsRepo.getPlaylistConfigById(playlistConfigId);
-};
+}
 
-export const createPlaylistConfig = (
+export function createPlaylistConfig(
   playlistConfig: PlaylistConfigInsert,
-): Promise<PlaylistConfig> => {
+): Promise<PlaylistConfig> {
   return playlistConfigsRepo.createPlaylistConfig(playlistConfig);
-};
+}
 
-export const updatePlaylistConfig = (
+export function updatePlaylistConfig(
   playlistConfigId: number,
   playlistConfig: PlaylistConfigUpdate,
-): Promise<PlaylistConfig> => {
+): Promise<PlaylistConfig> {
   return playlistConfigsRepo.updatePlaylistConfig(
     playlistConfigId,
     playlistConfig,
   );
-};
+}
+
+export function getPlaylistConfigBySpotifyPlaylistId(
+  spotifyPlaylistId: string,
+): Promise<PlaylistConfig | undefined> {
+  return playlistConfigsRepo.getPlaylistConfigBySpotifyPlaylistId(
+    spotifyPlaylistId,
+  );
+}
+
+export function upsertPlaylistConfigBySpotifyId(
+  playlistConfig: PlaylistConfigInsert,
+): Promise<PlaylistConfig> {
+  return playlistConfigsRepo.upsertPlaylistConfigBySpotifyId(playlistConfig);
+}

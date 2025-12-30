@@ -1,4 +1,3 @@
-import { env } from "@env";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
 import { Hono } from "hono";
 import * as authService from "./auth.service";
@@ -16,13 +15,8 @@ export const authRoutes = new Hono()
     const code = c.req.query("code");
     try {
       const user = await authService.authorizeSpotifyUser(code!);
-      await authService.setUserCookie(c, user!);
-      return c.redirect(env.CLIENT_URL);
+      return c.text("Successfully authorized " + user.spotifyUserId);
     } catch (e) {
       return c.text((e as Error).message, 500);
     }
-  })
-  .post("/logout", async (c) => {
-    authService.deleteUserCookie(c);
-    return c.json({ success: true });
   });

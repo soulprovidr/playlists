@@ -1,30 +1,28 @@
 import * as playlistSourcesRepo from "./playlist-sources.repo";
 import { PlaylistSource, PlaylistSourceInsert } from "./playlist-sources.types";
 
-export const getPlaylistSourcesByPlaylistConfigIds = (
+export function getPlaylistSourcesByPlaylistConfigIds(
   playlistConfigIds: number[],
-): Promise<PlaylistSource[]> => {
+): Promise<PlaylistSource[]> {
   return playlistSourcesRepo.getPlaylistSourcesByPlaylistConfigIds(
     playlistConfigIds,
   );
-};
+}
 
-export const createPlaylistSource = (
+export function createPlaylistSource(
   playlistSource: PlaylistSourceInsert,
-): Promise<PlaylistSource> => {
+): Promise<PlaylistSource> {
   return playlistSourcesRepo.createPlaylistSource(playlistSource);
-};
+}
 
-export const deletePlaylistSource = (
-  playlistSourceId: number,
-): Promise<void> => {
+export function deletePlaylistSource(playlistSourceId: number): Promise<void> {
   return playlistSourcesRepo.deletePlaylistSource(playlistSourceId);
-};
+}
 
-export const deletePlaylistSourcesByPlaylistConfigId = (
+export function deletePlaylistSourcesByPlaylistConfigId(
   playlistConfigId: number,
-): Promise<void> => {
+): Promise<void> {
   return playlistSourcesRepo.deletePlaylistSourcesByPlaylistConfigId(
     playlistConfigId,
   );
-};
+}

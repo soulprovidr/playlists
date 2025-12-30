@@ -24,9 +24,9 @@ export interface PlaylistSourceValidationResult {
  * Main validation function that determines the source type and validates accordingly
  * Attempts to validate as Reddit first, then falls back to RSS
  */
-export const validatePlaylistSourceUrl = async (
+export async function validatePlaylistSourceUrl(
   url: string,
-): Promise<PlaylistSourceValidationResult> => {
+): Promise<PlaylistSourceValidationResult> {
   try {
     // Validate URL format
     new URL(url);
@@ -69,4 +69,4 @@ export const validatePlaylistSourceUrl = async (
       rssResult.error ||
       "URL does not appear to be a valid Reddit URL or RSS feed. Supported formats: Reddit subreddit/user URLs or RSS feed URLs",
   };
-};
+}

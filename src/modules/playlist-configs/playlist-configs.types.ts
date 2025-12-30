@@ -5,6 +5,18 @@ export enum BuildCadence {
   WEEKLY = "WEEKLY",
 }
 
+export enum BuildStatus {
+  UNSTARTED = "UNSTARTED",
+  IN_PROGRESS = "IN_PROGRESS",
+  ERRORED = "ERRORED",
+  COMPLETED = "COMPLETED",
+}
+
+export enum EntityType {
+  ALBUMS = "ALBUMS",
+  TRACKS = "TRACKS",
+}
+
 export enum PlaylistConfigRepeat {
   NONE = "none",
   WEEKLY = "weekly",
@@ -14,18 +26,8 @@ export enum PlaylistSourceType {
   REDDIT = "reddit",
 }
 
-export enum BuildStatus {
-  UNSTARTED = "UNSTARTED",
-  IN_PROGRESS = "IN_PROGRESS",
-  ERRORED = "ERRORED",
-  COMPLETED = "COMPLETED",
-}
-
 export interface PlaylistConfigsTable {
   id: Generated<number>;
-  userId: number;
-  name: string;
-  description: string;
   spotifyPlaylistId: string;
   buildStatus: ColumnType<BuildStatus, BuildStatus | undefined, BuildStatus>;
   buildCadence: ColumnType<
@@ -35,6 +37,7 @@ export interface PlaylistConfigsTable {
   >;
   buildDay: string | null;
   lastBuiltDate: string | null;
+  entityType: ColumnType<EntityType, EntityType | undefined, EntityType>;
   createdAt: ColumnType<string, never, never>;
   updatedAt: ColumnType<string, never, never>;
 }

@@ -4,14 +4,10 @@
 
 This application consists of two main components:
 1. **Server**: Hono-based API server (entrypoint: `src/_app.ts`)
-2. **Client**: Vite/React application (root: `src/client/`)
 3. **CLI**: Command-line interface (entrypoint: `src/_cli.ts`)
 
 ### Development Environment
 - Server runs on port 3000 (dev: `npm run dev:api`)
-- Client runs on port 3001 (dev: `npm run dev:client`)
-- In development, the client proxies `/api` requests to `http://localhost:3000`
-- Both components run independently in development
 
 ## Environment Management
 
@@ -200,7 +196,6 @@ Example route pattern:
 - JWT-based authentication
 - Signed cookies for session management
 - Auth middleware: `src/api/middleware/auth.ts`
-- Cookie utilities: `@cookies`
 
 ## Client Architecture (React + Vite)
 
