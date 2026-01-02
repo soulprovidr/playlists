@@ -15,10 +15,6 @@ export function createPlaylistSource(
   return playlistSourcesRepo.createPlaylistSource(playlistSource);
 }
 
-export function deletePlaylistSource(playlistSourceId: number): Promise<void> {
-  return playlistSourcesRepo.deletePlaylistSource(playlistSourceId);
-}
-
 export function deletePlaylistSourcesByPlaylistConfigId(
   playlistConfigId: number,
 ): Promise<void> {

@@ -22,17 +22,6 @@ export async function getAllPlaylistConfigs(): Promise<PlaylistConfig[]> {
   return database.selectFrom("playlistConfigs").selectAll().execute();
 }
 
-export async function createPlaylistConfig(
-  playlistConfig: PlaylistConfigInsert,
-): Promise<PlaylistConfig> {
-  const result = await database
-    .insertInto("playlistConfigs")
-    .values(playlistConfig)
-    .returningAll()
-    .executeTakeFirstOrThrow();
-  return result;
-}
-
 export async function updatePlaylistConfig(
   playlistConfigId: number,
   playlistConfig: PlaylistConfigUpdate,

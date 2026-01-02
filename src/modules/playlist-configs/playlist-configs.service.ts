@@ -16,12 +16,6 @@ export function getPlaylistConfigById(
   return playlistConfigsRepo.getPlaylistConfigById(playlistConfigId);
 }
 
-export function createPlaylistConfig(
-  playlistConfig: PlaylistConfigInsert,
-): Promise<PlaylistConfig> {
-  return playlistConfigsRepo.createPlaylistConfig(playlistConfig);
-}
-
 export function updatePlaylistConfig(
   playlistConfigId: number,
   playlistConfig: PlaylistConfigUpdate,
@@ -29,14 +23,6 @@ export function updatePlaylistConfig(
   return playlistConfigsRepo.updatePlaylistConfig(
     playlistConfigId,
     playlistConfig,
-  );
-}
-
-export function getPlaylistConfigBySpotifyPlaylistId(
-  spotifyPlaylistId: string,
-): Promise<PlaylistConfig | undefined> {
-  return playlistConfigsRepo.getPlaylistConfigBySpotifyPlaylistId(
-    spotifyPlaylistId,
   );
 }
 

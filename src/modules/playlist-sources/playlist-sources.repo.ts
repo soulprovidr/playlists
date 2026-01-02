@@ -22,15 +22,6 @@ export async function createPlaylistSource(
   return result;
 }
 
-export async function deletePlaylistSource(
-  playlistSourceId: number,
-): Promise<void> {
-  await database
-    .deleteFrom("playlistSources")
-    .where("id", "=", playlistSourceId)
-    .execute();
-}
-
 export async function deletePlaylistSourcesByPlaylistConfigId(
   playlistConfigId: number,
 ): Promise<void> {
