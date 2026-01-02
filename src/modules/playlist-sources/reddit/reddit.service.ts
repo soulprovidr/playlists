@@ -1,6 +1,7 @@
 import { logger } from "@logger";
+import { EntityType } from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
-import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import axios from "axios";
 import _ from "lodash";
 import {
@@ -183,6 +184,7 @@ async function fetchUserPosts(
  */
 export async function getPlaylistItems(
   config: RedditSourceConfig,
+  entityType: EntityType,
 ): Promise<PlaylistItem[]> {
   logger.info(
     `[reddit] Extracting playlist items from Reddit ${config.type}: ${config.value}`,
@@ -237,8 +239,10 @@ export async function getPlaylistItems(
   logger.info(`[reddit] Found ${allComments.length} comments`);
 
   // Extract playlist items from titles
-  const itemsFromTitles =
-    await playlistItemsService.getPlaylistItemsFromText(postTitles);
+  const itemsFromTitles = await playlistItemsService.getPlaylistItemsFromText(
+    postTitles,
+    entityType,
+  );
   logger.info(
     `[reddit] Extracted ${itemsFromTitles.length} items from post titles`,
   );
@@ -250,6 +254,7 @@ export async function getPlaylistItems(
   for (let i = 0; i < commentBatches.length; i++) {
     const batchItems = await playlistItemsService.getPlaylistItemsFromText(
       commentBatches[i],
+      entityType,
     );
     itemsFromComments.push(...batchItems);
     logger.info(
@@ -270,7 +275,7 @@ export async function getPlaylistItems(
   const allItems = [...itemsFromTitles, ...itemsFromComments];
   const uniqueItems = _.uniqBy(
     allItems,
-    (item) => `${item.artist.toLowerCase()}-${item.title.toLowerCase()}`,
+    (item) => `${item.artist.toLowerCase()}-${item.name.toLowerCase()}`,
   );
 
   logger.info(`[reddit] Total unique playlist items: ${uniqueItems.length}`);

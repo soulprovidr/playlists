@@ -10,6 +10,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
   await db.schema
     .createTable("playlist_configs_new")
     .addColumn("id", "integer", (col) => col.primaryKey().autoIncrement())
+    .addColumn("name", "varchar", (col) => col.notNull())
     .addColumn("spotify_playlist_id", "varchar")
     .addColumn("build_status", "varchar", (col) => col.defaultTo("UNSTARTED"))
     .addColumn("build_cadence", "varchar", (col) => col.defaultTo("NONE"))
@@ -24,10 +25,11 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     .execute();
 
-  // Copy data from old table to new table (excluding user_id, name, description)
+  // Copy data from old table to new table (excluding user_id, description)
   await sql`
     INSERT INTO playlist_configs_new (
       id,
+      name,
       spotify_playlist_id,
       build_status,
       build_cadence,
@@ -39,6 +41,7 @@ export async function up(db: Kysely<unknown>): Promise<void> {
     )
     SELECT
       id,
+      name,
       spotify_playlist_id,
       build_status,
       build_cadence,
@@ -86,7 +89,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     )
     .execute();
 
-  // Copy data back (user_id, name, description will need default values)
+  // Copy data back (user_id, description will need default values)
   await sql`
     INSERT INTO playlist_configs_old (
       id,
@@ -105,7 +108,7 @@ export async function down(db: Kysely<unknown>): Promise<void> {
     SELECT
       id,
       1,
-      'Unknown',
+      name,
       '',
       spotify_playlist_id,
       build_status,

@@ -2,8 +2,11 @@ import { getSpotifyUserId } from "@config";
 import { LocalDate } from "@js-joda/core";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
-import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
+import {
+  BuildStatus,
+  EntityType,
+} from "@modules/playlist-configs/playlist-configs.types";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
   PlaylistSource,
@@ -19,15 +22,16 @@ import _ from "lodash";
 
 async function getPlaylistItems(
   source: PlaylistSource,
+  entityType: EntityType,
 ): Promise<PlaylistItem[]> {
   switch (source.type) {
     case PlaylistSourceType.REDDIT: {
       const config = source.config as RedditSourceConfig;
-      return redditService.getPlaylistItems(config);
+      return redditService.getPlaylistItems(config, entityType);
     }
     case PlaylistSourceType.RSS: {
       const config = source.config as RssSourceConfig;
-      return rssService.getTextContent(config);
+      return rssService.getTextContent(config, entityType);
     }
     default:
       logger.warn(`[buildPlaylist] Unsupported source type: ${source.type}`);
@@ -63,7 +67,7 @@ export async function buildPlaylist(playlistConfigId: number) {
     const playlistItems: PlaylistItem[] = [];
 
     for (const source of playlistSources) {
-      const items = await getPlaylistItems(source);
+      const items = await getPlaylistItems(source, playlistConfig.entityType);
       playlistItems.push(...items);
     }
 
@@ -76,12 +80,25 @@ export async function buildPlaylist(playlistConfigId: number) {
         (item) => async () =>
           backOff(
             async () => {
-              logger.info(
-                `[buildPlaylist] Searching for Spotify track: ${item.artist} - ${item.title}`,
-              );
               try {
+                // For albums, search for the album and get the most popular track
+                if (playlistConfig.entityType === EntityType.ALBUMS) {
+                  logger.info(
+                    `[buildPlaylist] Searching for album: ${item.artist} - ${item.name}`,
+                  );
+                  return spotifyApiService.getMostPopularTrackFromAlbum(
+                    spotifyApi,
+                    item.artist,
+                    item.name,
+                  );
+                }
+
+                // For tracks, search directly for the track
+                logger.info(
+                  `[buildPlaylist] Searching for Spotify track: ${item.artist} - ${item.name}`,
+                );
                 const searchResult = await spotifyApi.searchTracks(
-                  `${item.artist} ${item.title}`,
+                  `${item.artist} ${item.name}`,
                 );
 
                 if (
@@ -173,5 +190,6 @@ export async function buildPlaylist(playlistConfigId: number) {
     await playlistConfigsService.updatePlaylistConfig(playlistConfig.id, {
       buildStatus: BuildStatus.ERRORED,
     });
+    throw new Error();
   }
 }

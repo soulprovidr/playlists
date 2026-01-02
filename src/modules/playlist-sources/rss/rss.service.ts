@@ -1,6 +1,7 @@
 import { logger } from "@logger";
+import { EntityType } from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
-import { PlaylistItem } from "@modules/playlist-items/playlist-items.types";
+import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import _ from "lodash";
 import RssParser from "rss-parser";
 import { RssSourceConfig } from "../playlist-sources.types";
@@ -13,9 +14,12 @@ const parser = new RssParser();
 
 export async function getTextContent(
   config: RssSourceConfig,
+  entityType: EntityType,
 ): Promise<PlaylistItem[]> {
   const { items } = await parser.parseURL(config.feedUrl);
-  logger.info(`[rss] Found ${items.length} content items from RSS feed`);
+  logger.info(
+    `[rss] Found ${items.length} content items from RSS feed: ${config.feedUrl}`,
+  );
 
   // Extract playlist items from content (in batches to avoid token limits)
   const contentBatches = _.chunk(items, CONTENT_BATCH_SIZE);
@@ -24,6 +28,7 @@ export async function getTextContent(
   for (let i = 0; i < contentBatches.length; i++) {
     const batchItems = await playlistItemsService.getPlaylistItemsFromText(
       JSON.stringify(contentBatches[i]),
+      entityType,
       `
         - Ignore the "creator" or "author" fields – these represent the names of the author of the post, NOT the artist being referenced by the post.
         - Attempt to infer the artist name from the post URL or any available image URL. For example, if the post URL is "https://pitchfork.com/reviews/tracks/rooster-nuketown-blues/" and the title is "Nuketown Blues", the artist is likely "rooster".
@@ -43,7 +48,7 @@ export async function getTextContent(
   // Deduplicate
   const uniqueItems = _.uniqBy(
     allItems,
-    (item) => `${item.artist.toLowerCase()}-${item.title.toLowerCase()}`,
+    (item) => `${item.artist.toLowerCase()}-${item.name.toLowerCase()}`,
   );
 
   return uniqueItems;

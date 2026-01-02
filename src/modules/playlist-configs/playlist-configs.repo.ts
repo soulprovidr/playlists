@@ -68,6 +68,7 @@ export async function upsertPlaylistConfigBySpotifyId(
     const result = await database
       .updateTable("playlistConfigs")
       .set({
+        name: playlistConfig.name,
         buildCadence: playlistConfig.buildCadence ?? BuildCadence.NONE,
         buildDay: playlistConfig.buildDay ?? null,
         entityType: playlistConfig.entityType ?? EntityType.TRACKS,
@@ -90,4 +91,11 @@ export async function upsertPlaylistConfigBySpotifyId(
     .returningAll()
     .executeTakeFirstOrThrow();
   return result;
+}
+
+export async function deletePlaylistConfigById(playlistConfigId: number) {
+  await database
+    .deleteFrom("playlistConfigs")
+    .where("id", "=", playlistConfigId)
+    .execute();
 }

@@ -28,6 +28,7 @@ export enum PlaylistSourceType {
 
 export interface PlaylistConfigsTable {
   id: Generated<number>;
+  name: string;
   spotifyPlaylistId: string;
   buildStatus: ColumnType<BuildStatus, BuildStatus | undefined, BuildStatus>;
   buildCadence: ColumnType<

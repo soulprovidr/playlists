@@ -1,10 +1,14 @@
 import type { ConfigPlaylist } from "@config";
-import { getConfigPlaylists, getSpotifyUserId } from "@config";
+import { flattenSources, getConfigPlaylists, getSpotifyUserId } from "@config";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
-import type { PlaylistConfigInsert } from "@modules/playlist-configs/playlist-configs.types";
+import {
+  BuildCadence,
+  type PlaylistConfigInsert,
+} from "@modules/playlist-configs/playlist-configs.types";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import type { PlaylistSourceInsert } from "@modules/playlist-sources/playlist-sources.types";
+import _ from "lodash";
 
 /**
  * Seed a single playlist configuration and its sources
@@ -13,9 +17,10 @@ async function seedPlaylist(configPlaylist: ConfigPlaylist): Promise<void> {
   const { sources, ...playlistData } = configPlaylist;
 
   const playlistConfigInsert: PlaylistConfigInsert = {
+    name: playlistData.name,
     spotifyPlaylistId: playlistData.spotifyPlaylistId,
-    buildCadence: playlistData.buildCadence,
-    buildDay: playlistData.buildDay,
+    buildCadence: playlistData.buildCadence ?? BuildCadence.WEEKLY,
+    buildDay: playlistData.buildDay ?? "monday",
     entityType: playlistData.entityType,
   };
 
@@ -30,13 +35,15 @@ async function seedPlaylist(configPlaylist: ConfigPlaylist): Promise<void> {
   );
 
   // Handle sources if provided
-  if (sources && sources.length > 0) {
+  const flattenedSources = flattenSources(sources);
+
+  if (flattenedSources.length > 0) {
     // Delete existing sources and replace with new ones from config
     await playlistSourcesService.deletePlaylistSourcesByPlaylistConfigId(
       playlistConfig.id,
     );
 
-    for (const source of sources) {
+    for (const source of flattenedSources) {
       const sourceInsert: PlaylistSourceInsert = {
         playlistConfigId: playlistConfig.id,
         type: source.type,
@@ -47,7 +54,7 @@ async function seedPlaylist(configPlaylist: ConfigPlaylist): Promise<void> {
     }
 
     logger.info(
-      `[seedPlaylists] Added ${sources.length} source(s) to playlist ${playlistConfig.spotifyPlaylistId}`,
+      `[seedPlaylists] Added ${flattenedSources.length} source(s) to playlist ${playlistConfig.spotifyPlaylistId}`,
     );
   }
 }
@@ -73,6 +80,19 @@ export async function seedPlaylists(): Promise<void> {
   if (configPlaylists.length === 0) {
     logger.info("[seedPlaylists] No playlists to seed from config.yml");
     return;
+  }
+
+  logger.info(`[seedPlaylists] Deleting existing playlist configs`);
+  const playlistConfigs = await playlistConfigsService.getAllPlaylistConfigs();
+  const deleteSpotifyPlaylistIds = _.difference(
+    playlistConfigs.map((config) => config.spotifyPlaylistId),
+    configPlaylists.map((config) => config.spotifyPlaylistId),
+  );
+
+  for (const spotifyPlaylistId of deleteSpotifyPlaylistIds) {
+    await playlistConfigsService.deletePlaylistConfigBySpotifyPlaylistId(
+      spotifyPlaylistId,
+    );
   }
 
   logger.info(

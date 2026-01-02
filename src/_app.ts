@@ -1,10 +1,12 @@
-import { apiRoutes } from "@api/api.routes";
+import { env } from "@env";
+import { serve } from "@hono/node-server";
 import { logger } from "@logger";
 import { seedPlaylists } from "@tasks/seed-playlists";
 import { Hono } from "hono";
 import { contextStorage } from "hono/context-storage";
 import { secureHeaders } from "hono/secure-headers";
 import cron from "node-cron";
+import { appRoutes } from "./app/app.routes";
 import { schedulePlaylists } from "./tasks/schedule-playlists";
 
 const app = new Hono();
@@ -19,7 +21,7 @@ app.use(async (c, next) => {
 app.use(secureHeaders());
 app.use(contextStorage());
 
-app.route("/", apiRoutes);
+app.route("/", appRoutes);
 
 const HOURLY_SCHEDULE = "0 * * * *"; // Run every hour
 cron.schedule(HOURLY_SCHEDULE, async () => {
@@ -29,7 +31,8 @@ cron.schedule(HOURLY_SCHEDULE, async () => {
 });
 
 // Startup tasks.
-seedPlaylists();
-schedulePlaylists();
+await seedPlaylists();
 
-export default app;
+logger.info(`Login with Spotify to begin: ${env.HOST}:${env.PORT}/authorize`);
+
+serve({ fetch: app.fetch, port: env.PORT });

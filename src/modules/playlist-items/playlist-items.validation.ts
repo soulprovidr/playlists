@@ -10,6 +10,30 @@ export const trackValidator = z.object({
   title: z.string(),
 });
 
-export type PlaylistItem = z.infer<
-  typeof albumValidator | typeof trackValidator
->;
+export type Album = z.infer<typeof albumValidator>;
+export type Track = z.infer<typeof trackValidator>;
+
+export type PlaylistItem = {
+  artist: string;
+  name: string;
+};
+
+/**
+ * Normalizes an album to a PlaylistItem with a common `name` field
+ */
+export function albumToPlaylistItem(album: Album): PlaylistItem {
+  return {
+    artist: album.artist,
+    name: album.album,
+  };
+}
+
+/**
+ * Normalizes a track to a PlaylistItem with a common `name` field
+ */
+export function trackToPlaylistItem(track: Track): PlaylistItem {
+  return {
+    artist: track.artist,
+    name: track.title,
+  };
+}

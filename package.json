@@ -74,7 +74,6 @@
   },
   "scripts": {
     "cli": "tsx src/_cli.ts",
-    "dev:api": "vite",
     "migrate:clean": "tsx src/database/tasks/migrate-clean.ts",
     "migrate:make": "kysely migrate:make",
     "migrate:latest": "kysely migrate:latest",

@@ -4,8 +4,10 @@ import {
   EntityType,
 } from "@modules/playlist-configs/playlist-configs.types";
 import {
-  PlaylistSourceConfig,
   PlaylistSourceType,
+  RedditSourceConfig,
+  RedditSourceType,
+  RssSourceConfig,
 } from "@modules/playlist-sources/playlist-sources.types";
 import yaml from "js-yaml";
 import fs from "node:fs";
@@ -14,22 +16,33 @@ import path from "node:path";
 const CONFIG_FILE_NAME = "config.yml";
 
 /**
- * Source configuration as defined in config.yml
+ * Grouped sources configuration as defined in config.yml
+ * - reddit: list of subreddit names (strings)
+ * - rss: list of feed URLs (strings)
+ */
+export interface ConfigPlaylistSources {
+  reddit?: string[];
+  rss?: string[];
+}
+
+/**
+ * Flattened source with type for internal use
  */
 export interface ConfigPlaylistSource {
   type: PlaylistSourceType;
-  config: PlaylistSourceConfig;
+  config: RedditSourceConfig | RssSourceConfig;
 }
 
 /**
  * Playlist configuration as defined in config.yml
  */
 export interface ConfigPlaylist {
+  name: string;
   spotifyPlaylistId: string;
   buildCadence?: BuildCadence;
   buildDay?: string | null;
   entityType?: EntityType;
-  sources?: ConfigPlaylistSource[];
+  sources?: ConfigPlaylistSources;
 }
 
 /**
@@ -93,4 +106,38 @@ export function getSpotifyUserId(): string {
 export function getConfigPlaylists(): ConfigPlaylist[] {
   const config = loadConfig();
   return config.playlists;
+}
+
+/**
+ * Flatten grouped sources into an array with type information
+ * - Reddit strings become RedditSourceConfig with type "subreddit"
+ * - RSS strings become RssSourceConfig with feedUrl
+ */
+export function flattenSources(
+  sources: ConfigPlaylistSources | undefined,
+): ConfigPlaylistSource[] {
+  if (!sources) {
+    return [];
+  }
+
+  const flattened: ConfigPlaylistSource[] = [];
+
+  if (sources.reddit) {
+    for (const subreddit of sources.reddit) {
+      const config: RedditSourceConfig = {
+        type: RedditSourceType.SUBREDDIT,
+        value: subreddit,
+      };
+      flattened.push({ type: PlaylistSourceType.REDDIT, config });
+    }
+  }
+
+  if (sources.rss) {
+    for (const feedUrl of sources.rss) {
+      const config: RssSourceConfig = { feedUrl };
+      flattened.push({ type: PlaylistSourceType.RSS, config });
+    }
+  }
+
+  return flattened;
 }

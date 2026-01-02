@@ -1,3 +1,4 @@
+import * as playlistSourcesRepo from "../playlist-sources/playlist-sources.repo";
 import * as playlistConfigsRepo from "./playlist-configs.repo";
 import type {
   PlaylistConfig,
@@ -43,4 +44,18 @@ export function upsertPlaylistConfigBySpotifyId(
   playlistConfig: PlaylistConfigInsert,
 ): Promise<PlaylistConfig> {
   return playlistConfigsRepo.upsertPlaylistConfigBySpotifyId(playlistConfig);
+}
+
+export async function deletePlaylistConfigBySpotifyPlaylistId(
+  spotifyPlaylistId: string,
+) {
+  const playlistConfig =
+    await playlistConfigsRepo.getPlaylistConfigBySpotifyPlaylistId(
+      spotifyPlaylistId,
+    );
+  if (!playlistConfig) return;
+  await playlistSourcesRepo.deletePlaylistSourcesByPlaylistConfigId(
+    playlistConfig.id,
+  );
+  await playlistConfigsRepo.deletePlaylistConfigById(playlistConfig.id);
 }

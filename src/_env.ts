@@ -5,8 +5,8 @@ export const env = createEnv(
   z.object({
     // Application.
     NODE_ENV: z.enum(["development", "production"]),
-    COOKIE_SECRET: z.string(),
-    API_URL: z.coerce.string(),
+    HOST: z.string(),
+    PORT: z.coerce.number(),
 
     // Database.
     DATABASE_PATH: z.string(),
