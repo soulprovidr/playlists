@@ -43,16 +43,16 @@ export async function buildPlaylist(playlistConfigId: number) {
   const playlistConfig =
     await playlistConfigsService.getPlaylistConfigById(playlistConfigId);
   if (!playlistConfig) {
-    throw new Error(
-      `[buildPlaylist] No matching playlist config found for ${playlistConfigId}`,
-    );
+    const message = `No matching playlist config found for ${playlistConfigId}`;
+    logger.error(`[buildPlaylist] ${message}`);
+    throw new Error(message);
   }
 
   const spotifyUserId = getSpotifyUserId();
   if (!spotifyUserId) {
-    throw new Error(
-      `[buildPlaylist] No spotifyUserId configured in config.yml`,
-    );
+    const message = `No spotifyUserId configured in config.yml`;
+    logger.error(`[buildPlaylist] ${message}`);
+    throw new Error(message);
   }
 
   const spotifyApi = await spotifyApiService.getInstance(spotifyUserId);
@@ -131,7 +131,7 @@ export async function buildPlaylist(playlistConfigId: number) {
                     break;
                 }
 
-                throw new Error();
+                throw error;
               }
             },
             { numOfAttempts: 5 },
@@ -147,13 +147,14 @@ export async function buildPlaylist(playlistConfigId: number) {
           trackUris.push(trackUri);
         }
       } catch {
-        logger.error(`[buildPlaylist] Error finding track.`);
+        logger.warn(`[buildPlaylist] Error finding track.`);
       }
     }
 
     if (!trackUris.length) {
-      logger.error(`[buildPlaylist] No tracks found for playlist.`);
-      throw new Error();
+      const message = `No tracks found for playlist.`;
+      logger.error(`[buildPlaylist] ${message}`);
+      throw new Error(message);
     }
 
     logger.info(`[buildPlaylist] Found ${trackUris.length} tracks on Spotify.`);
@@ -190,6 +191,6 @@ export async function buildPlaylist(playlistConfigId: number) {
     await playlistConfigsService.updatePlaylistConfig(playlistConfig.id, {
       buildStatus: BuildStatus.ERRORED,
     });
-    throw new Error();
+    throw error;
   }
 }

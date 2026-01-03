@@ -2,12 +2,19 @@
 
 ## Architecture Overview
 
-This application consists of two main components:
-1. **Server**: Hono-based API server (entrypoint: `src/_app.ts`)
-3. **CLI**: Command-line interface (entrypoint: `src/_cli.ts`)
+This application is a playlist automation tool that:
+1. Aggregates music recommendations from various sources (Reddit, RSS feeds)
+2. Uses OpenAI to extract artist/track information from text content
+3. Builds and maintains Spotify playlists automatically
+
+### Components
+- **Server**: Hono-based API server with cron scheduling (entrypoint: `src/_app.ts`)
+- **CLI**: Command-line interface for manual operations (entrypoint: `src/_cli.ts`)
+- **Config**: YAML-based playlist configuration (`config.yml`)
 
 ### Development Environment
-- Server runs on port 3000 (dev: `npm run dev:api`)
+- Server runs on port 3000 (start: `npm run start`)
+- CLI runs with: `npm run cli`
 
 ## Environment Management
 
@@ -20,13 +27,27 @@ This application consists of two main components:
 
 ### Environment Variables
 Current environment variables (defined in `mise.toml`):
-- `API_URL`: API URL
-- `CLIENT_URL`: Client URL for CORS
-- `COOKIE_SECRET`: Secret for signed cookies
 - `NODE_ENV`: Environment mode (development/production)
+- `HOST`: Server host URL
+- `PORT`: Server port number
 - `DATABASE_PATH`: Path to SQLite database
-- `OPENAI_API_KEY`: OpenAI API key
+- `OPENAI_API_KEY`: OpenAI API key for text extraction
 - `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`: Spotify OAuth credentials
+
+## Configuration Management
+
+### YAML Configuration (`config.yml`)
+The application uses a YAML configuration file for playlist definitions:
+- Loaded via `@config` import (`src/_config.ts`)
+- Defines `spotifyUserId` and `playlists` array
+- Each playlist has: `name`, `spotifyPlaylistId`, `entityType`, and `sources`
+- Sources are grouped by type: `reddit` (subreddit names) and `rss` (feed URLs)
+
+### Config Types
+- `AppConfig`: Root configuration structure
+- `ConfigPlaylist`: Individual playlist configuration
+- `ConfigPlaylistSources`: Grouped sources (reddit/rss arrays)
+- `ConfigPlaylistSource`: Flattened source with type information
 
 ## Database Management
 
@@ -39,6 +60,7 @@ Current environment variables (defined in `mise.toml`):
 
 ### Database Structure
 - SQLite database using `better-sqlite3`
+- Database file: `src/database/local.db`
 - Tables defined as TypeScript types in respective module folders
 - Database schema exported from `src/_database.ts`
 
@@ -50,12 +72,12 @@ Example query patterns:
     import { database } from "@database";
 
     // SELECT
-    const users = await database.selectFrom("users").selectAll().execute();
+    const configs = await database.selectFrom("playlist_configs").selectAll().execute();
 
     // WHERE
-    const user = await database
-      .selectFrom("users")
-      .where("id", "=", userId)
+    const config = await database
+      .selectFrom("playlist_configs")
+      .where("id", "=", configId)
       .selectAll()
       .executeTakeFirst();
 
@@ -64,11 +86,6 @@ Example query patterns:
 - Create new migration: `npm run migrate:make -- migration_name`
 - Run migrations: `npm run migrate:latest`
 - Clean database: `npm run migrate:clean`
-
-#### Seeds
-- Location: `src/database/seeds/`
-- Create new seed: `npm run seed:make -- seed_name`
-- Run seeds: `npm run seed:run`
 
 ## Logging
 
@@ -107,35 +124,37 @@ Example logging patterns:
 - `error`: Error messages
 - `fatal`: Fatal errors
 
-### Debug Page
-- Access at `/debug` route in the client
-- Real-time log streaming via Server-Sent Events (SSE)
-- Features:
-  - Live tail of server logs
-  - Auto-scroll toggle
-  - Download logs as text file
-  - Clear logs button
-  - Connection status indicator
-- Logs are stored in memory (last 1000 entries)
-- API endpoints:
-  - `GET /api/debug/logs/stream` - SSE stream for real-time logs
-  - `GET /api/debug/logs/all` - Get all logs as JSON
-  - `DELETE /api/debug/logs` - Clear all logs
-
 ## Code Organization
 
 ### Path Aliases
 Use the following path aliases (defined in `tsconfig.json`):
-- `@api/*` → `src/api/*`
-- `@cookies` → `src/_cookies`
+- `@config` → `src/_config`
 - `@database` → `src/_database`
 - `@database/*` → `src/database/*`
 - `@env` → `src/_env`
+- `@jobs` → `src/_jobs`
 - `@lib/*` → `src/lib/*`
+- `@logger` → `src/_logger`
 - `@modules/*` → `src/modules/*`
 - `@tasks/*` → `src/tasks/*`
 
 **ALWAYS** use path aliases instead of relative imports for these directories.
+
+### Project Structure
+
+    src/
+    ├── _app.ts           # Server entrypoint
+    ├── _cli.ts           # CLI entrypoint
+    ├── _config.ts        # YAML config loader
+    ├── _database.ts      # Database instance
+    ├── _env.ts           # Environment validation
+    ├── _jobs.ts          # Job queue instance
+    ├── _logger.ts        # Logger instance
+    ├── app/              # App routes and services
+    ├── database/         # Migrations and database tasks
+    ├── lib/              # Shared utilities
+    ├── modules/          # Feature modules
+    └── tasks/            # Background tasks
 
 ### Module Structure
 Modules follow a consistent pattern in `src/modules/`:
@@ -144,8 +163,14 @@ Modules follow a consistent pattern in `src/modules/`:
     ├── [module-name].types.ts    # TypeScript types and interfaces
     ├── [module-name].repo.ts     # Database repository layer (Kysely queries)
     ├── [module-name].service.ts  # Business logic layer
-    ├── [module-name].helpers.ts  # Module helpers
-    └── [module-name].routes.ts   # API routes (if applicable)
+    └── [module-name].helpers.ts  # Module helpers (optional)
+
+### Current Modules
+- `open-ai/`: OpenAI API integration for text extraction
+- `playlist-configs/`: Playlist configuration management
+- `playlist-items/`: Playlist item validation and types
+- `playlist-sources/`: Source management (Reddit, RSS submodules)
+- `spotify/`: Spotify API integration and access token management
 
 ### Layered Architecture
 1. **Routes Layer** (`*.routes.ts`): Handle HTTP requests/responses
@@ -162,20 +187,19 @@ When importing services, repositories, and helpers, use the following pattern:
     import * as moduleRepo from "./[module-name].repo";
     import * as moduleHelpers from "./[module-name].helpers";
 
-### API Structure
-- API routes are defined in `src/api/`
-- Main API router: `src/api/api.routes.ts`
-- Auth routes: `src/api/auth/`
-- Feature routes organized by domain (e.g., `src/api/playlists/`)
-- Middleware in `src/api/middleware/`
+### Tasks
+Background tasks are located in `src/tasks/`:
+- `build-playlist.ts`: Builds a playlist from configured sources
+- `schedule-playlists.ts`: Schedules playlists for building based on cadence
+- `seed-playlists.ts`: Seeds database from `config.yml` on startup
 
 ## Server Architecture (Hono)
 
 ### Server Setup
 - Framework: Hono
 - Entry point: `src/_app.ts`
-- Middleware: logger, secure headers
-- Static file serving for production builds
+- Middleware: request logging, secure headers, context storage
+- Cron scheduling with `node-cron` for hourly playlist checks
 
 ### Routing
 Example route pattern:
@@ -193,32 +217,30 @@ Example route pattern:
       });
 
 ### Authentication
-- JWT-based authentication
-- Signed cookies for session management
-- Auth middleware: `src/api/middleware/auth.ts`
+- Spotify OAuth flow at `/authorize` and `/authorize/callback`
+- Access tokens stored in database via `spotify-access-tokens` module
 
-## Client Architecture (React + Vite)
+## Job Queue
 
-### Client Structure
-- Entry point: `src/client/main.tsx`
-- App wrapper: `src/client/app/index.tsx`
-- Router: Wouter
-- State management: TanStack Query
-- Styling: Tailwind CSS + DaisyUI
+### Using the Job Queue
+- Job queue instance available via `@jobs` import
+- Used for background processing of playlist builds
+- Processes jobs sequentially with error handling
 
-### Client Organization
+### Job Queue Usage
+Example:
 
-    src/client/
-    ├── app/           # App setup, providers, routes
-    ├── components/    # Reusable UI components
-    ├── features/      # Feature-specific components (auth, dashboard, playlists)
-    ├── lib/           # Client-side utilities
-    └── public/        # Static assets
+    import { jobs } from "@jobs";
 
-### API Calls from Client
-- Use TanStack Query for data fetching
-- API calls should target `/api/*` endpoints
-- Proxy configured in development to forward to server
+    jobs.add(
+      async () => {
+        await buildPlaylist(playlistConfigId);
+      },
+      {
+        onSuccess: (jobId) => logger.info(`Job ${jobId} completed`),
+        onError: (jobId, error) => logger.error({ err: error }, `Job ${jobId} failed`),
+      }
+    );
 
 ## CLI Interface
 
@@ -226,7 +248,10 @@ Example route pattern:
 - Entry point: `src/_cli.ts`
 - Run with: `npm run cli`
 - Uses `@inquirer/prompts` for interactive prompts
-- Can trigger background tasks and maintenance operations
+
+### Available Commands
+- **Rebuild a playlist**: Select and rebuild a specific playlist
+- **Schedule playlists**: Run the playlist scheduling task
 
 ### CLI Best Practices
 - Use interactive prompts for user input
@@ -242,8 +267,9 @@ Example route pattern:
 
 ### Error Handling
 - Use try-catch blocks for async operations
-- Provide meaningful error messages
-- Log errors appropriately
+- Use `exponential-backoff` for retrying API calls
+- Log errors appropriately with error objects
+- Update build status on playlist build failures
 
 ### Code Style
 - Use Prettier for formatting (`.prettierrc.json`)
@@ -252,7 +278,9 @@ Example route pattern:
 - Prefer named exports over default exports
 
 ### Dependencies
-- Use lodash for utility functions
+- Use lodash for utility functions (chaining, shuffle, chunk)
 - Use @js-joda for date/time operations
+- Use axios for HTTP requests
+- Use zod for validation
 - Never install raw SQL libraries
 - Never install additional environment management libraries (use mise)

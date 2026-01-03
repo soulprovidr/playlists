@@ -23,19 +23,19 @@ playlists:
       reddit:
         - reggae
 
-  # - name: "albums"
-  #   spotifyPlaylistId: "3FxuIvXkD3JvLKstWBLfff"
-  #   entityType: "ALBUMS"
-  #   sources:
-  #     rss:
-  #       - https://www.backseatmafia.com/category/album-reviews/feed
-  #       - https://daily.bandcamp.com/feed
-  #       - https://beatsperminute.com/feed
-  #       - https://www.theguardian.com/music+tone/albumreview/rss
-  #       - https://www.theneedledrop.com/articles?format=rss
-  #       - https://www.nme.com/reviews/album/feed
-  #       - https://feeds.npr.org/1104/rss.xml
-  #       - https://pitchfork.com/feed/feed-album-reviews/rss
-  #       - https://www.popmatters.com/category/music-reviews/feed
-  #       - https://thequietus.com/reviews.atom
-  #       - https://www.rollingstone.com/music/music-album-reviews/feed/
+  - name: "albums"
+    spotifyPlaylistId: "3FxuIvXkD3JvLKstWBLfff"
+    entityType: "ALBUMS"
+    sources:
+      rss:
+        - https://www.backseatmafia.com/category/album-reviews/feed
+        - https://daily.bandcamp.com/feed
+        # - https://beatsperminute.com/feed
+        - https://www.theguardian.com/music+tone/albumreview/rss
+        # - https://www.theneedledrop.com/articles?format=rss
+        - https://www.nme.com/reviews/album/feed
+        - https://feeds.npr.org/1104/rss.xml
+        - https://pitchfork.com/feed/feed-album-reviews/rss
+        # - https://www.popmatters.com/category/music-reviews/feed
+        - https://thequietus.com/columns/quietus-reviews/feed
+        - https://www.rollingstone.com/music/music-album-reviews/feed/
