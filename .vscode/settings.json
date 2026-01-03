@@ -1,5 +1,0 @@
-{
-  "css.styleSheets": ["./src/client/scss/styles.scss"],
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
-}
