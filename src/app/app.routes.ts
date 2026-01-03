@@ -4,6 +4,9 @@ import { Hono } from "hono";
 import * as authService from "./app.service";
 
 export const appRoutes = new Hono()
+  .get("/", async (c) => {
+    return c.text("ok");
+  })
   .get("/authorize", async (c) => {
     const spotifyApi = await spotifyApiService.getInstance();
     const spotifyAuthUrl = spotifyApi.createAuthorizeURL(
