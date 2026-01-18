@@ -18,7 +18,8 @@
     "tsconfig-paths": "4.2.0",
     "tsx": "4.19.2",
     "typescript": "5.8.2",
-    "typescript-eslint": "8.25.0"
+    "typescript-eslint": "8.25.0",
+    "vitest": "4.0.17"
   },
   "dependencies": {
     "@hono/node-server": "1.13.7",
@@ -50,6 +51,7 @@
     "migrate:clean": "tsx src/database/tasks/migrate-clean.ts",
     "migrate:make": "kysely migrate:make",
     "migrate:latest": "kysely migrate:latest",
-    "start": "tsx src/_app.ts"
+    "start": "tsx src/_app.ts",
+    "test": "vitest"
   }
 }
