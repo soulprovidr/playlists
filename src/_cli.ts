@@ -48,7 +48,7 @@ async function selectCommand(): Promise<Command | null> {
 
 async function main() {
   await seedPlaylists();
-  logger.info(`Login with Spotify to begin: ${env.HOST}/authorize`);
+  logger.info(`Login with Spotify to begin: ${env.SERVER_HOST}/authorize`);
 
   const command = await selectCommand();
   switch (command) {

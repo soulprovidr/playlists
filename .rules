@@ -28,7 +28,7 @@ This application is a playlist automation tool that:
 ### Environment Variables
 Current environment variables (defined in `mise.toml`):
 - `NODE_ENV`: Environment mode (development/production)
-- `HOST`: Server host URL
+- `SERVER_HOST`: Server host URL
 - `PORT`: Server port number
 - `DATABASE_PATH`: Path to SQLite database
 - `OPENAI_API_KEY`: OpenAI API key for text extraction

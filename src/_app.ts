@@ -33,6 +33,6 @@ cron.schedule(HOURLY_SCHEDULE, async () => {
 // Startup tasks.
 await seedPlaylists();
 
-logger.info(`Login with Spotify to begin: ${env.HOST}/authorize`);
+logger.info(`Login with Spotify to begin: ${env.SERVER_HOST}/authorize`);
 
 serve({ fetch: app.fetch, port: env.PORT });
