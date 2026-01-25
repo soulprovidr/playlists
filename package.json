@@ -51,7 +51,7 @@
     "migrate:clean": "tsx src/database/tasks/migrate-clean.ts",
     "migrate:make": "kysely migrate:make",
     "migrate:latest": "kysely migrate:latest",
-    "start": "tsx src/_app.ts",
+    "start": "npm run migrate:latest && tsx src/_app.ts",
     "test": "vitest"
   }
 }
