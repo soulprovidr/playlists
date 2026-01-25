@@ -4,6 +4,8 @@ import * as playlistConfigsService from "@modules/playlist-configs/playlist-conf
 import { buildPlaylist } from "@tasks/build-playlist";
 import { schedulePlaylists } from "./tasks/schedule-playlists";
 
+import { env } from "@env";
+import { seedPlaylists } from "@tasks/seed-playlists";
 import "tsconfig-paths/register";
 
 enum Command {
@@ -45,6 +47,9 @@ async function selectCommand(): Promise<Command | null> {
 }
 
 async function main() {
+  await seedPlaylists();
+  logger.info(`Login with Spotify to begin: ${env.HOST}/authorize`);
+
   const command = await selectCommand();
   switch (command) {
     case Command.REBUILD_PLAYLIST:

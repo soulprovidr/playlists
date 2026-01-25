@@ -2,6 +2,36 @@ import { DayOfWeek, LocalDate } from "@js-joda/core";
 import { BuildCadence, PlaylistConfig } from "./playlist-configs.types";
 
 /**
+ * Map of uppercase day names to their DayOfWeek integer values (ISO-8601)
+ */
+const DAY_NAME_TO_VALUE: Record<string, number> = {
+  MONDAY: DayOfWeek.MONDAY.value(),
+  TUESDAY: DayOfWeek.TUESDAY.value(),
+  WEDNESDAY: DayOfWeek.WEDNESDAY.value(),
+  THURSDAY: DayOfWeek.THURSDAY.value(),
+  FRIDAY: DayOfWeek.FRIDAY.value(),
+  SATURDAY: DayOfWeek.SATURDAY.value(),
+  SUNDAY: DayOfWeek.SUNDAY.value(),
+};
+
+/**
+ * Parses an uppercased buildDay string (e.g., "MONDAY") into a DayOfWeek value.
+ * @param buildDay - The uppercased day name string
+ * @returns The DayOfWeek instance
+ * @throws Error if the buildDay value is invalid
+ */
+export function parseBuildDay(buildDay: string): DayOfWeek {
+  const uppercased = buildDay.toUpperCase();
+  const value = DAY_NAME_TO_VALUE[uppercased];
+
+  if (value === undefined) {
+    throw new Error(`Invalid buildDay value: ${buildDay}`);
+  }
+
+  return DayOfWeek.of(value);
+}
+
+/**
  * Calculate the number of days between two days of the week
  * Using Sunday as the last day of the week (week ends on Sunday)
  * @param from - The starting day of the week
@@ -46,7 +76,7 @@ export function getShouldBuildPlaylist(config: PlaylistConfig): boolean {
   }
 
   try {
-    const scheduledDay = config.buildDay as unknown as DayOfWeek;
+    const scheduledDay = parseBuildDay(config.buildDay);
     const lastBuiltDate = LocalDate.parse(config.lastBuiltDate);
     const today = LocalDate.now();
 
@@ -58,7 +88,7 @@ export function getShouldBuildPlaylist(config: PlaylistConfig): boolean {
     // Get the day of week for today
     const todayDayOfWeek = today.dayOfWeek();
 
-    if (todayDayOfWeek == scheduledDay) {
+    if (todayDayOfWeek.equals(scheduledDay)) {
       return true;
     }
 

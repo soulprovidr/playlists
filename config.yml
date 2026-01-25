@@ -26,7 +26,7 @@ playlists:
   - name: "albums"
     spotifyPlaylistId: "3FxuIvXkD3JvLKstWBLfff"
     entityType: "ALBUMS"
-    buildDay: "friday"
+    buildDay: "FRIDAY"
     sources:
       rss:
         - https://www.backseatmafia.com/category/album-reviews/feed

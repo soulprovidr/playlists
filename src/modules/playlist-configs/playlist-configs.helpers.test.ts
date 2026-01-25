@@ -1,4 +1,4 @@
-import { DayOfWeek, LocalDate } from "@js-joda/core";
+import { LocalDate } from "@js-joda/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getShouldBuildPlaylist } from "./playlist-configs.helpers";
 import {
@@ -17,7 +17,7 @@ function createMockConfig(
     spotifyPlaylistId: "spotify123",
     buildStatus: BuildStatus.UNSTARTED,
     buildCadence: BuildCadence.WEEKLY,
-    buildDay: DayOfWeek.MONDAY as unknown as string,
+    buildDay: "MONDAY",
     lastBuiltDate: null,
     entityType: EntityType.TRACKS,
     createdAt: "2024-01-01T00:00:00Z",
@@ -51,7 +51,7 @@ describe("getShouldBuildPlaylist", () => {
     it("should continue evaluation when build cadence is WEEKLY", () => {
       const config = createMockConfig({
         buildCadence: BuildCadence.WEEKLY,
-        buildDay: DayOfWeek.WEDNESDAY as unknown as string,
+        buildDay: "WEDNESDAY",
         lastBuiltDate: null,
       });
 
@@ -91,7 +91,7 @@ describe("getShouldBuildPlaylist", () => {
   describe("built today scenarios", () => {
     it("should return false when built today", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-10", // Same as mocked "today"
       });
 
@@ -102,7 +102,7 @@ describe("getShouldBuildPlaylist", () => {
   describe("scheduled day scenarios", () => {
     it("should return true when today is the scheduled day and not built today", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.WEDNESDAY as unknown as string, // Today is Wednesday
+        buildDay: "WEDNESDAY", // Today is Wednesday
         lastBuiltDate: "2024-01-03", // Last Wednesday
       });
 
@@ -111,7 +111,7 @@ describe("getShouldBuildPlaylist", () => {
 
     it("should return false when today is the scheduled day but already built today", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.WEDNESDAY as unknown as string,
+        buildDay: "WEDNESDAY",
         lastBuiltDate: "2024-01-10", // Built today
       });
 
@@ -124,7 +124,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Wednesday (Jan 10), scheduled day is Monday
       // Last built on Friday Jan 5 (before Monday Jan 8)
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-05", // Friday before the Monday
       });
 
@@ -135,7 +135,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Wednesday (Jan 10), scheduled day is Monday
       // Last built on Monday Jan 8 (the scheduled day)
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-08", // Monday (the scheduled day)
       });
 
@@ -146,7 +146,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Wednesday (Jan 10), scheduled day is Monday
       // Last built on Tuesday Jan 9 (after the Monday)
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-09", // Tuesday after the Monday
       });
 
@@ -159,7 +159,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Wednesday (Jan 10), scheduled day is Friday
       // Last built last Friday (Jan 5)
       const config = createMockConfig({
-        buildDay: DayOfWeek.FRIDAY as unknown as string,
+        buildDay: "FRIDAY",
         lastBuiltDate: "2024-01-05",
       });
 
@@ -169,7 +169,7 @@ describe("getShouldBuildPlaylist", () => {
     it("should return false when scheduled day is tomorrow", () => {
       // Today is Wednesday (Jan 10), scheduled day is Thursday
       const config = createMockConfig({
-        buildDay: DayOfWeek.THURSDAY as unknown as string,
+        buildDay: "THURSDAY",
         lastBuiltDate: "2024-01-04", // Last Thursday
       });
 
@@ -185,7 +185,7 @@ describe("getShouldBuildPlaylist", () => {
 
     it("should return true when today is Sunday and scheduled for Sunday, not built yet this week", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.SUNDAY as unknown as string,
+        buildDay: "SUNDAY",
         lastBuiltDate: "2024-01-07", // Last Sunday
       });
 
@@ -194,7 +194,7 @@ describe("getShouldBuildPlaylist", () => {
 
     it("should return false when today is Sunday and already built today", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.SUNDAY as unknown as string,
+        buildDay: "SUNDAY",
         lastBuiltDate: "2024-01-14", // Built today
       });
 
@@ -205,7 +205,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Sunday Jan 14, scheduled for Monday
       // Last built on Sunday Jan 7 (before Monday Jan 8)
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-07",
       });
 
@@ -221,7 +221,7 @@ describe("getShouldBuildPlaylist", () => {
 
     it("should return true when today is Monday and scheduled for Monday, not built yet", () => {
       const config = createMockConfig({
-        buildDay: DayOfWeek.MONDAY as unknown as string,
+        buildDay: "MONDAY",
         lastBuiltDate: "2024-01-08", // Last Monday
       });
 
@@ -232,7 +232,7 @@ describe("getShouldBuildPlaylist", () => {
       // Today is Monday Jan 15, scheduled for Sunday
       // Last built on Saturday Jan 13 (before Sunday Jan 14)
       const config = createMockConfig({
-        buildDay: DayOfWeek.SUNDAY as unknown as string,
+        buildDay: "SUNDAY",
         lastBuiltDate: "2024-01-07", // Previous Sunday
       });
 
@@ -265,7 +265,7 @@ describe("getShouldBuildPlaylist", () => {
       vi.spyOn(LocalDate, "now").mockReturnValue(LocalDate.of(2024, 1, 15));
 
       const config = createMockConfig({
-        buildDay: DayOfWeek.SATURDAY as unknown as string,
+        buildDay: "SATURDAY",
         lastBuiltDate: "2024-01-06", // Saturday of previous week
       });
 
@@ -278,7 +278,7 @@ describe("getShouldBuildPlaylist", () => {
       vi.spyOn(LocalDate, "now").mockReturnValue(LocalDate.of(2024, 1, 15));
 
       const config = createMockConfig({
-        buildDay: DayOfWeek.SATURDAY as unknown as string,
+        buildDay: "SATURDAY",
         lastBuiltDate: "2024-01-13", // Saturday of current week
       });
 

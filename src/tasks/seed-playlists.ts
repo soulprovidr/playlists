@@ -1,6 +1,7 @@
 import type { ConfigPlaylist } from "@config";
 import { flattenSources, getConfigPlaylists, getSpotifyUserId } from "@config";
 import { logger } from "@logger";
+import * as playlistConfigsHelpers from "@modules/playlist-configs/playlist-configs.helpers";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import {
   BuildCadence,
@@ -16,11 +17,15 @@ import _ from "lodash";
 async function seedPlaylist(configPlaylist: ConfigPlaylist): Promise<void> {
   const { sources, ...playlistData } = configPlaylist;
 
+  const buildDay = playlistConfigsHelpers.parseBuildDay(
+    playlistData.buildDay ?? "MONDAY",
+  );
+
   const playlistConfigInsert: PlaylistConfigInsert = {
     name: playlistData.name,
     spotifyPlaylistId: playlistData.spotifyPlaylistId,
     buildCadence: playlistData.buildCadence ?? BuildCadence.WEEKLY,
-    buildDay: playlistData.buildDay ?? "monday",
+    buildDay: buildDay.toString(),
     entityType: playlistData.entityType,
   };
 
