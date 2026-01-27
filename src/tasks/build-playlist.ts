@@ -165,7 +165,7 @@ export async function buildPlaylist(playlistConfigId: number) {
 
     logger.info(`[buildPlaylist] Found ${trackUriSet.size} tracks on Spotify.`);
 
-    const chunkedTrackUris: string[][] = _.chain(trackUriSet.values().toArray())
+    const chunkedTrackUris: string[][] = _.chain(Array.from(trackUriSet))
       .compact()
       .shuffle()
       .chunk(100)
