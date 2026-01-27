@@ -1,9 +1,0 @@
-[build]
-builder = "railpack"
-
-[deploy]
-startCommand = "npm run migrate:latest && npm run start"
-healthcheckPath = "/"
-healthcheckTimeout = 100
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 3
