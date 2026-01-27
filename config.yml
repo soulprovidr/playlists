@@ -16,6 +16,13 @@ spotifyUserId: "soulprovidr"
 #   - Build status and last built date are preserved during updates
 
 playlists:
+  - name: "/r/downtempo"
+    spotifyPlaylistId: "6oQTjBhs3o2znIeNfII8Pz"
+    entityType: "TRACKS"
+    sources:
+      reddit:
+        - downtempo
+
   - name: "/r/reggae"
     spotifyPlaylistId: "3u3Ny2Nf6MsXVXUuWw1WqG"
     entityType: "TRACKS"

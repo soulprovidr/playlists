@@ -1,5 +1,6 @@
 import { logger } from "@logger";
 import { EntityType } from "@modules/playlist-configs/playlist-configs.types";
+import * as playlistItemsHelpers from "@modules/playlist-items/playlist-items.helpers";
 import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
 import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import _ from "lodash";
@@ -12,7 +13,7 @@ const RATE_LIMIT_DELAY_MS = 1000; // Delay between batches to respect rate limit
 
 const parser = new RssParser();
 
-export async function getTextContent(
+export async function getPlaylistItems(
   config: RssSourceConfig,
   entityType: EntityType,
 ): Promise<PlaylistItem[]> {
@@ -46,10 +47,7 @@ export async function getTextContent(
   }
 
   // Deduplicate
-  const uniqueItems = _.uniqBy(
-    allItems,
-    (item) => `${item.artist.toLowerCase()}-${item.name.toLowerCase()}`,
-  );
+  const uniqueItems = playlistItemsHelpers.dedupePlaylistItems(allItems);
 
   return uniqueItems;
 }

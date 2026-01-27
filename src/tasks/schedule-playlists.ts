@@ -5,6 +5,25 @@ import * as playlistConfigsRepo from "@modules/playlist-configs/playlist-configs
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import { BuildStatus } from "@modules/playlist-configs/playlist-configs.types";
 import { buildPlaylist } from "@tasks/build-playlist";
+import cron, { ScheduledTask } from "node-cron";
+
+let _task: ScheduledTask;
+
+export function initializeScheduler(): void {
+  if (!_task) {
+    const DAILY_SCHEDULE = "0 0 * * *"; // Run every day at midnight
+    _task = cron.schedule(
+      DAILY_SCHEDULE,
+      async () => {
+        logger.info("[Scheduler] Running scheduled playlist check...");
+        await schedulePlaylists();
+        logger.info("[Scheduler] Scheduled playlist check completed.");
+      },
+      { timezone: "America/Toronto" },
+    );
+    _task.execute();
+  }
+}
 
 /**
  * Check all playlist configs and queue builds for those that should run today

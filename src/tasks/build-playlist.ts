@@ -6,6 +6,7 @@ import {
   BuildStatus,
   EntityType,
 } from "@modules/playlist-configs/playlist-configs.types";
+import * as playlistItemsHelpers from "@modules/playlist-items/playlist-items.helpers";
 import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import * as playlistSourcesService from "@modules/playlist-sources/playlist-sources.service";
 import {
@@ -19,6 +20,66 @@ import * as rssService from "@modules/playlist-sources/rss/rss.service";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
 import { backOff } from "exponential-backoff";
 import _ from "lodash";
+import SpotifyWebApi from "spotify-web-api-node";
+
+async function searchPlaylistItem(
+  spotifyApi: SpotifyWebApi,
+  item: PlaylistItem,
+  entityType: EntityType,
+): Promise<string | null> {
+  try {
+    switch (entityType) {
+      case EntityType.ALBUMS: {
+        logger.info(
+          `[buildPlaylist] Searching for album: ${item.artist} - ${item.name}`,
+        );
+        return spotifyApiService.getMostPopularTrackFromAlbum(
+          spotifyApi,
+          item.artist,
+          item.name,
+        );
+      }
+      case EntityType.TRACKS: {
+        logger.info(
+          `[buildPlaylist] Searching for track: ${item.artist} - ${item.name}`,
+        );
+        const searchResult = await spotifyApi.searchTracks(
+          `${item.artist} ${item.name}`,
+        );
+
+        if (
+          !searchResult.body.tracks ||
+          searchResult.body.tracks.items.length === 0
+        ) {
+          return null;
+        }
+
+        return searchResult.body.tracks.items[0].uri;
+      }
+    }
+  } catch (error) {
+    // @ts-expect-error Spotify API error
+    const { message, statusCode } = error;
+
+    switch (statusCode) {
+      case 401:
+        logger.warn(`[buildPlaylist] Token expired. Refreshing token...`);
+        await spotifyApi.refreshAccessToken();
+        break;
+      case 429:
+        logger.warn(`[buildPlaylist] Rate limit reached.`);
+        break;
+      default:
+        logger.warn(
+          { err: error },
+          `[buildPlaylist] Error searching for track: ${message}`,
+        );
+        break;
+    }
+
+    throw error;
+  }
+}
 
 async function getPlaylistItems(
   source: PlaylistSource,
@@ -31,7 +92,7 @@ async function getPlaylistItems(
     }
     case PlaylistSourceType.RSS: {
       const config = source.config as RssSourceConfig;
-      return rssService.getTextContent(config, entityType);
+      return rssService.getPlaylistItems(config, entityType);
     }
     default:
       logger.warn(`[buildPlaylist] Unsupported source type: ${source.type}`);
@@ -64,102 +125,48 @@ export async function buildPlaylist(playlistConfigId: number) {
 
   try {
     logger.info("[buildPlaylist] Extracting PlaylistItems...");
-    const playlistItems: PlaylistItem[] = [];
+    const allPlaylistItems: PlaylistItem[] = [];
 
     for (const source of playlistSources) {
       const items = await getPlaylistItems(source, playlistConfig.entityType);
-      playlistItems.push(...items);
+      allPlaylistItems.push(...items);
     }
+
+    const playlistItems =
+      playlistItemsHelpers.dedupePlaylistItems(allPlaylistItems);
 
     logger.info(`[buildPlaylist] Found ${playlistItems.length} PlaylistItems.`);
 
-    const trackUriPromises: (() => Promise<string | null>)[] = _.chain(
-      playlistItems,
-    )
-      .map(
-        (item) => async () =>
-          backOff(
-            async () => {
-              try {
-                // For albums, search for the album and get the most popular track
-                if (playlistConfig.entityType === EntityType.ALBUMS) {
-                  logger.info(
-                    `[buildPlaylist] Searching for album: ${item.artist} - ${item.name}`,
-                  );
-                  return spotifyApiService.getMostPopularTrackFromAlbum(
-                    spotifyApi,
-                    item.artist,
-                    item.name,
-                  );
-                }
-
-                // For tracks, search directly for the track
-                logger.info(
-                  `[buildPlaylist] Searching for Spotify track: ${item.artist} - ${item.name}`,
-                );
-                const searchResult = await spotifyApi.searchTracks(
-                  `${item.artist} ${item.name}`,
-                );
-
-                if (
-                  !searchResult.body.tracks ||
-                  searchResult.body.tracks.items.length === 0
-                ) {
-                  return null;
-                }
-
-                return searchResult.body.tracks.items[0].uri;
-              } catch (error) {
-                // @ts-expect-error Spotify API error
-                const { message, statusCode } = error;
-
-                switch (statusCode) {
-                  case 401:
-                    logger.warn(
-                      `[buildPlaylist] Token expired. Refreshing token...`,
-                    );
-                    await spotifyApi.refreshAccessToken();
-                    break;
-                  case 429:
-                    logger.warn(`[buildPlaylist] Rate limit reached.`);
-                    break;
-                  default:
-                    logger.warn(
-                      { err: error },
-                      `[buildPlaylist] Error searching for track: ${message}`,
-                    );
-                    break;
-                }
-
-                throw error;
-              }
-            },
-            { numOfAttempts: 5 },
-          ),
-      )
-      .value();
-
-    const trackUris: string[] = [];
-    for (const promise of trackUriPromises) {
+    const trackUriSet = new Set<string>();
+    for (const playlistItem of playlistItems) {
       try {
-        const trackUri = await promise();
+        const trackUri = await backOff(
+          async () =>
+            searchPlaylistItem(
+              spotifyApi,
+              playlistItem,
+              playlistConfig.entityType,
+            ),
+          { numOfAttempts: 5 },
+        );
         if (trackUri) {
-          trackUris.push(trackUri);
+          trackUriSet.add(trackUri);
         }
       } catch {
-        logger.warn(`[buildPlaylist] Error finding track.`);
+        logger.warn(playlistItem, `[buildPlaylist] Error finding track.`);
       }
     }
 
-    if (!trackUris.length) {
+    if (!trackUriSet.size) {
       const message = `No tracks found for playlist.`;
       logger.error(`[buildPlaylist] ${message}`);
       throw new Error(message);
     }
 
-    logger.info(`[buildPlaylist] Found ${trackUris.length} tracks on Spotify.`);
+    logger.info(`[buildPlaylist] Found ${trackUriSet.size} tracks on Spotify.`);
 
-    const chunkedTrackUris: string[][] = _.chain(trackUris)
+    const chunkedTrackUris: string[][] = _.chain(trackUriSet.values().toArray())
+      .compact()
       .shuffle()
       .chunk(100)
       .value();

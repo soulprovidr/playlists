@@ -2,11 +2,9 @@ import { search } from "@inquirer/prompts";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import { buildPlaylist } from "@tasks/build-playlist";
-import { schedulePlaylists } from "./tasks/schedule-playlists";
-
-import { env } from "@env";
 import { seedPlaylists } from "@tasks/seed-playlists";
 import "tsconfig-paths/register";
+import { schedulePlaylists } from "./tasks/schedule-playlists";
 
 enum Command {
   REBUILD_PLAYLIST = "REBUILD_PLAYLIST",
@@ -19,7 +17,7 @@ async function rebuildPlaylistCommand() {
     message: "Select a playlist",
     source: () => [
       ...playlistConfigs.map((config) => ({
-        name: config.spotifyPlaylistId,
+        name: config.name,
         value: config,
       })),
       { name: "Exit", value: null },
@@ -46,10 +44,8 @@ async function selectCommand(): Promise<Command | null> {
   });
 }
 
-async function main() {
-  await seedPlaylists();
-  logger.info(`Login with Spotify to begin: ${env.SERVER_HOST}/authorize`);
-
+async function runMenu() {
+  console.clear();
   const command = await selectCommand();
   switch (command) {
     case Command.REBUILD_PLAYLIST:
@@ -59,9 +55,15 @@ async function main() {
       await schedulePlaylistsCommand();
       break;
     default:
-      process.exit(1);
+      process.exit(0);
   }
-  main();
+  runMenu();
+}
+
+async function main() {
+  await seedPlaylists();
+
+  runMenu();
 }
 
 main();

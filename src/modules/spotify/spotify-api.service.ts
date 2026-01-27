@@ -47,6 +47,7 @@ export async function getInstance(
             Instant.now().plusSeconds(res.body.expires_in),
           ),
         });
+        spotifyApi.setAccessToken(res.body.access_token);
       } else {
         throw new Error("Failed to refresh access token.");
       }

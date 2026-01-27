@@ -1,5 +1,5 @@
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
-import { schedulePlaylists } from "@tasks/schedule-playlists";
+import { initializeScheduler } from "@tasks/schedule-playlists";
 import { Hono } from "hono";
 import * as authService from "./app.service";
 
@@ -19,7 +19,7 @@ export const appRoutes = new Hono()
     const code = c.req.query("code");
     try {
       const user = await authService.authorizeSpotifyUser(code!);
-      schedulePlaylists();
+      initializeScheduler();
       return c.text(
         `Successfully authorized ${user.spotifyUserId}. You may now close this window.`,
       );

@@ -1,5 +1,6 @@
 import { logger } from "@logger";
 import { EntityType } from "@modules/playlist-configs/playlist-configs.types";
+import * as playlistItemsHelpers from "@modules/playlist-items/playlist-items.helpers";
 import * as playlistItemsService from "@modules/playlist-items/playlist-items.service";
 import { PlaylistItem } from "@modules/playlist-items/playlist-items.validation";
 import axios from "axios";
@@ -273,10 +274,7 @@ export async function getPlaylistItems(
 
   // Combine and deduplicate
   const allItems = [...itemsFromTitles, ...itemsFromComments];
-  const uniqueItems = _.uniqBy(
-    allItems,
-    (item) => `${item.artist.toLowerCase()}-${item.name.toLowerCase()}`,
-  );
+  const uniqueItems = playlistItemsHelpers.dedupePlaylistItems(allItems);
 
   logger.info(`[reddit] Total unique playlist items: ${uniqueItems.length}`);
 

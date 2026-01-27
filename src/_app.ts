@@ -1,13 +1,13 @@
+import { getSpotifyUserId } from "@config";
 import { env } from "@env";
 import { serve } from "@hono/node-server";
 import { logger } from "@logger";
+import * as spotifyAccessTokenService from "@modules/spotify/spotify-access-tokens/spotify-access-tokens.service";
 import { seedPlaylists } from "@tasks/seed-playlists";
 import { Hono } from "hono";
-import { contextStorage } from "hono/context-storage";
 import { secureHeaders } from "hono/secure-headers";
-import cron from "node-cron";
 import { appRoutes } from "./app/app.routes";
-import { schedulePlaylists } from "./tasks/schedule-playlists";
+import { initializeScheduler } from "./tasks/schedule-playlists";
 
 const app = new Hono();
 
@@ -19,20 +19,22 @@ app.use(async (c, next) => {
   logger.info(`${c.req.method} ${c.req.path} ${c.res.status} - ${ms}ms`);
 });
 app.use(secureHeaders());
-app.use(contextStorage());
 
 app.route("/", appRoutes);
-
-const HOURLY_SCHEDULE = "0 * * * *"; // Run every hour
-cron.schedule(HOURLY_SCHEDULE, async () => {
-  logger.info("[Scheduler] Running scheduled playlist check...");
-  await schedulePlaylists();
-  logger.info("[Scheduler] Scheduled playlist check completed.");
-});
 
 // Startup tasks.
 await seedPlaylists();
 
-logger.info(`Login with Spotify to begin: ${env.SERVER_HOST}/authorize`);
+// Authorize Spotify user (if necessary), then schedule playlists.
+const spotifyUserId = getSpotifyUserId();
+const spotifyAccessToken =
+  await spotifyAccessTokenService.getSpotifyAccessTokenBySpotifyUserId(
+    spotifyUserId,
+  );
+if (!spotifyAccessToken) {
+  logger.info(`Login with Spotify to begin: ${env.SERVER_HOST}/authorize`);
+} else {
+  initializeScheduler();
+}
 
 serve({ fetch: app.fetch, port: env.PORT });
