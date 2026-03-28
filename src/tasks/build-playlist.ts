@@ -19,6 +19,7 @@ import * as redditService from "@modules/playlist-sources/reddit/reddit.service"
 import * as rssService from "@modules/playlist-sources/rss/rss.service";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
 import { backOff } from "exponential-backoff";
+import Fuse from "fuse.js";
 import _ from "lodash";
 import SpotifyWebApi from "spotify-web-api-node";
 
@@ -26,7 +27,7 @@ async function searchPlaylistItem(
   spotifyApi: SpotifyWebApi,
   item: PlaylistItem,
   entityType: EntityType,
-): Promise<string | null> {
+): Promise<SpotifyApi.TrackObjectFull | null> {
   try {
     switch (entityType) {
       case EntityType.ALBUMS: {
@@ -54,7 +55,29 @@ async function searchPlaylistItem(
           return null;
         }
 
-        return searchResult.body.tracks.items[0].uri;
+        const artistFuse = new Fuse(searchResult.body.tracks.items, {
+          keys: ["artists.name"],
+          includeScore: true,
+        });
+        const artistResults = artistFuse
+          .search(item.artist)
+          .filter((r) => (r.score ?? 1) < 0.5)
+          .map((r) => r.item);
+
+        if (artistResults.length === 0) {
+          return null;
+        }
+
+        const trackFuse = new Fuse(artistResults, {
+          keys: ["name"],
+          includeScore: true,
+        });
+        const trackResults = trackFuse.search(item.name);
+        if (trackResults.length === 0) {
+          return null;
+        }
+
+        return _.minBy(trackResults, (r) => r.score)!.item;
       }
     }
   } catch (error) {
@@ -137,10 +160,10 @@ export async function buildPlaylist(playlistConfigId: number) {
 
     logger.info(`[buildPlaylist] Found ${playlistItems.length} PlaylistItems.`);
 
-    const trackUriSet = new Set<string>();
+    const tracksMap = new Map<string, SpotifyApi.TrackObjectFull>();
     for (const playlistItem of playlistItems) {
       try {
-        const trackUri = await backOff(
+        const track = await backOff(
           async () =>
             searchPlaylistItem(
               spotifyApi,
@@ -149,23 +172,25 @@ export async function buildPlaylist(playlistConfigId: number) {
             ),
           { numOfAttempts: 5 },
         );
-        if (trackUri) {
-          trackUriSet.add(trackUri);
+        if (track) {
+          tracksMap.set(track.id, track);
         }
       } catch {
         logger.warn(playlistItem, `[buildPlaylist] Error finding track.`);
       }
     }
 
-    if (!trackUriSet.size) {
+    if (!tracksMap.size) {
       const message = `No tracks found for playlist.`;
       logger.error(`[buildPlaylist] ${message}`);
       throw new Error(message);
     }
 
-    logger.info(`[buildPlaylist] Found ${trackUriSet.size} tracks on Spotify.`);
+    logger.info(`[buildPlaylist] Found ${tracksMap.size} tracks on Spotify.`);
 
-    const chunkedTrackUris: string[][] = _.chain(Array.from(trackUriSet))
+    const chunkedTrackUris: string[][] = _.chain(Array.from(tracksMap.values()))
+      .sortBy((t) => t.popularity, "desc")
+      .map((t) => t.uri)
       .compact()
       .shuffle()
       .chunk(100)

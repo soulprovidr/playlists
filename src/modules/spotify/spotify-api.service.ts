@@ -68,7 +68,7 @@ export async function getMostPopularTrackFromAlbum(
   spotifyApi: SpotifyWebApi,
   artist: string,
   albumName: string,
-): Promise<string | null> {
+): Promise<SpotifyApi.TrackObjectFull | null> {
   try {
     // Search for the album
     const searchResult = await spotifyApi.searchAlbums(
@@ -130,7 +130,7 @@ export async function getMostPopularTrackFromAlbum(
       `[spotify] Selected most popular track: ${mostPopularTrack.name} (popularity: ${mostPopularTrack.popularity})`,
     );
 
-    return mostPopularTrack.uri;
+    return mostPopularTrack;
   } catch (error) {
     logger.error(
       { err: error },

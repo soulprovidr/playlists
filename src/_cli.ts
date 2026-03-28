@@ -1,14 +1,16 @@
-import { search } from "@inquirer/prompts";
+import { input, search } from "@inquirer/prompts";
 import { logger } from "@logger";
 import * as playlistConfigsService from "@modules/playlist-configs/playlist-configs.service";
 import { buildPlaylist } from "@tasks/build-playlist";
 import { seedPlaylists } from "@tasks/seed-playlists";
+import { testSearch } from "@tasks/test-search";
 import "tsconfig-paths/register";
 import { schedulePlaylists } from "./tasks/schedule-playlists";
 
 enum Command {
   REBUILD_PLAYLIST = "REBUILD_PLAYLIST",
   SCHEDULE_PLAYLISTS = "SCHEDULE_PLAYLISTS",
+  TEST_SEARCH = "TEST_SEARCH",
 }
 
 async function rebuildPlaylistCommand() {
@@ -33,12 +35,17 @@ async function schedulePlaylistsCommand() {
   await schedulePlaylists();
 }
 
+async function testSearchCommand() {
+  await testSearch();
+}
+
 async function selectCommand(): Promise<Command | null> {
   return search({
     message: "What would you like to do?",
     source: () => [
       { name: "Rebuild a playlist", value: Command.REBUILD_PLAYLIST },
       { name: "Schedule playlists", value: Command.SCHEDULE_PLAYLISTS },
+      { name: "Test search (uses ./playlist-items.json)", value: Command.TEST_SEARCH },
       { name: "Exit", value: null },
     ],
   });
@@ -53,6 +60,9 @@ async function runMenu() {
       break;
     case Command.SCHEDULE_PLAYLISTS:
       await schedulePlaylistsCommand();
+      break;
+    case Command.TEST_SEARCH:
+      await testSearchCommand();
       break;
     default:
       process.exit(0);
