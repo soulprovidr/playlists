@@ -11,12 +11,19 @@ export const env = createEnv(
     // Database.
     DATABASE_PATH: z.string(),
 
-    // OpenAI.
-    OPENAI_API_KEY: z.string(),
+    // Anthropic.
+    ANTHROPIC_API_KEY: z.string(),
 
     // Spotify.
     SPOTIFY_CLIENT_ID: z.string(),
     SPOTIFY_CLIENT_SECRET: z.string(),
     SPOTIFY_REDIRECT_URI: z.string(),
+
+    // Debug.
+    DEBUG_PLAYLISTS: z
+      .string()
+      .transform((v) => v === "true")
+      .optional()
+      .default(false),
   }),
 );

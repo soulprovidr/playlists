@@ -1,5 +1,5 @@
 import { logger } from "@logger";
-import * as openAiApiService from "@modules/open-ai/open-ai-api.service";
+import * as anthropicApiService from "@modules/anthropic/anthropic-api.service";
 import { EntityType } from "@modules/playlist-configs/playlist-configs.types";
 import { z } from "zod";
 import { ALBUMS_PROMPT, TRACKS_PROMPT } from "./playlist-items.constants";
@@ -31,7 +31,7 @@ function getTracksPrompt(input: string) {
 
 export async function getAlbumsFromText(text: string): Promise<PlaylistItem[]> {
   try {
-    const { albums } = await openAiApiService.getCompletion(
+    const { albums } = await anthropicApiService.getCompletion(
       getAlbumsPrompt(text),
       z.object({
         albums: z.array(albumValidator),
@@ -46,7 +46,7 @@ export async function getAlbumsFromText(text: string): Promise<PlaylistItem[]> {
 
 export async function getTracksFromText(text: string): Promise<PlaylistItem[]> {
   try {
-    const { tracks } = await openAiApiService.getCompletion(
+    const { tracks } = await anthropicApiService.getCompletion(
       getTracksPrompt(text),
       z.object({
         tracks: z.array(trackValidator),

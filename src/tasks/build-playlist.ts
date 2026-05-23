@@ -18,6 +18,7 @@ import {
 import * as redditService from "@modules/playlist-sources/reddit/reddit.service";
 import * as rssService from "@modules/playlist-sources/rss/rss.service";
 import * as spotifyApiService from "@modules/spotify/spotify-api.service";
+import { writeDebugOutput } from "@lib/debug-output";
 import { backOff } from "exponential-backoff";
 import Fuse from "fuse.js";
 import _ from "lodash";
@@ -187,6 +188,24 @@ export async function buildPlaylist(playlistConfigId: number) {
     }
 
     logger.info(`[buildPlaylist] Found ${tracksMap.size} tracks on Spotify.`);
+
+    const tracks = Array.from(tracksMap.values());
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    writeDebugOutput(`${playlistConfig.spotifyPlaylistId}-${timestamp}.json`, {
+      playlistId: playlistConfig.spotifyPlaylistId,
+      playlistName: playlistConfig.name,
+      builtAt: new Date().toISOString(),
+      trackCount: tracks.length,
+      tracks: tracks.map((t) => ({
+        artist: t.artists.map((a) => a.name).join(", "),
+        name: t.name,
+        spotifyId: t.id,
+        spotifyUri: t.uri,
+        popularity: t.popularity,
+        album: t.album.name,
+        durationMs: t.duration_ms,
+      })),
+    });
 
     const chunkedTrackUris: string[][] = _.chain(Array.from(tracksMap.values()))
       .sortBy((t) => t.popularity, "desc")
